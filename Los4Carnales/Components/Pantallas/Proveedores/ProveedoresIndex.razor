@@ -1,0 +1,120 @@
+﻿@page "/Proveedor/Index"
+@using Microsoft.AspNetCore.Authorization
+
+@rendermode InteractiveServer
+
+@inject ProveedoresServices proveedoresService
+@inject NavigationManager navigationManager
+
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Registro de Proveedores</PageTitle>
+
+<div class="container">
+    <div class="card card-glass rounded-4 p-2">
+        <div class="card-body">
+
+            <div class="row align-items-end mb-4">
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Filtrar por</label>
+                    <InputSelect class="form-select input-glass" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opción</option>
+                        <option value="Nombre">Nombre</option>
+                        <option value="RNC">RNC</option>
+                        <option value="Telefono">Teléfono</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Búsqueda</label>
+                    <div class="input-group">
+                        <input class="form-control input-glass" @bind="ValorFiltro" placeholder="Buscar..." />
+                        <button type="button" class="btn btn-outline-success bi bi-search" @onclick="Buscar"></button>
+                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Restablecer"></button>
+                    </div>
+                </div>
+
+                <div class="col-md-1"></div>
+
+                <div class="col-md-4 text-end">
+                    <a href="/Proveedor/Create" class="btn btn-gradiente px-4 shadow-sm">
+                        <span class="bi bi-plus-square"></span> Crear
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover bg-transparent align-middle">
+                    <thead class="text-black" style="background-color: rgba(0,0,0,0.03); border-bottom: 2px solid rgba(0,0,0,0.1);">
+                        <tr>
+                            <th class="py-3 ps-3">ID</th>
+                            <th class="py-3">RNC</th>
+                            <th class="py-3">Nombre</th>
+                            <th class="py-3">Email</th>
+                            <th class="py-3 text-center">Teléfono</th>
+                            <th class="py-3 text-center">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: transparent;">
+                        @foreach (var item in ListaProveedores)
+                        {
+                            <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                <td class="ps-3 fw-bold text-muted">@item.ProveedorId</td>
+                                <td>@item.Nombre</td>
+                                <td class="text-center">@item.Telefono</td>
+                                <td class="text-center">
+                                    <a href="/Proveedor/Edit/@item.ProveedorId" class="btn btn-sm btn-outline-success border-0 bi bi-pencil-square fs-5"></a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!ListaProveedores.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No hay proveedores registrados.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer bg-transparent border-top-0 mt-2 pt-0 pb-3 px-4">
+            <small class="fw-bold text-muted">Cantidad: @ListaProveedores.Count()</small>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Proveedores> ListaProveedores { get; set; } = new List<Proveedores>();
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        
+        ListaProveedores = await proveedoresService.Listar(p => p.ProveedorId > 0);
+    }
+
+    private async Task Buscar()
+    {
+        if (!string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            if (Filtro == "Nombre")
+                ListaProveedores = await proveedoresService.Listar(p => p.Nombre.ToLower().Contains(ValorFiltro.ToLower()));
+            else if (Filtro == "Telefono")
+                ListaProveedores = await proveedoresService.Listar(p => p.Telefono.Contains(ValorFiltro));
+        }
+        else
+        {
+            ListaProveedores = await proveedoresService.Listar(p => p.ProveedorId > 0);
+        }
+    }
+
+    private async Task Restablecer()
+    {
+        ListaProveedores = await proveedoresService.Listar(p => p.ProveedorId > 0);
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+}
