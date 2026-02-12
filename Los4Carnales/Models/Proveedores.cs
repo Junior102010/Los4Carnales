@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Los4Carnales.Models;
 
-public class Proveedor
+public class Proveedores
 {
     [Key]
     public int ProveedorId { get; set; }
@@ -17,6 +17,6 @@ public class Proveedor
     public string Telefono { get; set; }
 
     [ForeignKey("CategoriaId")]
-    public ICollection<Categoria> ProveedorDetalle { get; set; } = new List<Categoria>();
+    public ICollection<Categorias> ProveedorDetalle { get; set; } = new List<Categorias>();
 }
 

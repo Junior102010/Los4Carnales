@@ -2,7 +2,7 @@
 
 namespace Los4Carnales.Models;
 
-public class Categoria
+public class Categorias
 {
     [Key]
     public int CategoriaId { get; set; }
