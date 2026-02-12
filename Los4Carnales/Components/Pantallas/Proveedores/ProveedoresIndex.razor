@@ -1,13 +1,8 @@
 ﻿@page "/Proveedor/Index"
-@using Microsoft.AspNetCore.Authorization
 
 @rendermode InteractiveServer
-
 @inject ProveedoresServices proveedoresService
 @inject NavigationManager navigationManager
-
-
-@attribute [Authorize(Roles = "Administrador")]
 
 <PageTitle>Registro de Proveedores</PageTitle>
 
