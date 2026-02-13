@@ -10,12 +10,12 @@ public class ProveedoresServices(IDbContextFactory<ApplicationDbContext> DbFacto
     public async Task<bool> Existe(int idProveedor)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.proveedores.AnyAsync(c => c.ProveedorId == idProveedor);
+        return await contexto.Proveedores.AnyAsync(c => c.ProveedorId == idProveedor);
     }
     public async Task<bool> ExisteNombre(string nombre, int idExcluir = 0)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.proveedores
+        return await contexto.Proveedores
             .AnyAsync(p => p.Nombre.ToLower() == nombre.ToLower() && p.ProveedorId != idExcluir);
     }
 
@@ -23,20 +23,20 @@ public class ProveedoresServices(IDbContextFactory<ApplicationDbContext> DbFacto
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
 
-        return await contexto.proveedores.FirstOrDefaultAsync(e => e.ProveedorId == id);
+        return await contexto.Proveedores.FirstOrDefaultAsync(e => e.ProveedorId == id);
     }
 
     public async Task<List<Proveedores>> Listar(Expression<Func<Proveedores, bool>> criterio)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.proveedores.Where(criterio).AsNoTracking().ToListAsync();
+        return await contexto.Proveedores.Where(criterio).AsNoTracking().ToListAsync();
 
     }
 
     public async Task<bool> Insertar(Proveedores proveedor)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        contexto.proveedores.Add(proveedor);
+        contexto.Proveedores.Add(proveedor);
         return await contexto.SaveChangesAsync() > 0;
     }
 
@@ -62,7 +62,7 @@ public class ProveedoresServices(IDbContextFactory<ApplicationDbContext> DbFacto
     public async Task<bool> Eliminar(int id)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.proveedores
+        return await contexto.Proveedores
             .Where(p => p.ProveedorId == id)
             .ExecuteDeleteAsync() > 0;
     }
