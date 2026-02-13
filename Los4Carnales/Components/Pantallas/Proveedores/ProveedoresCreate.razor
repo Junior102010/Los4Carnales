@@ -4,60 +4,71 @@
 @rendermode InteractiveServer
 
 <PageTitle>Proveedores</PageTitle>
-
 <div class="container mt-4">
     <div class="card card-glass rounded-4 p-4 shadow-sm">
-        
-        <div class="card-body bg-white rounded-4 p-4">
+        <EditForm Model="proveedor" OnValidSubmit="Guardar">
+            <DataAnnotationsValidator></DataAnnotationsValidator>
 
-            <div class="row g-4">
+            <div class="card-body bg-white rounded-4 p-4">
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Fecha Registro</label>
-                    <InputDate class="form-control input-glass" @bind-Value="proveedor.Fecha" />
+                <div class="row g-4">
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Fecha Registro</label>
+                        <InputDate class="form-control input-glass" @bind-Value="proveedor.Fecha" />
+                        <ValidationMessage For="@(() => (proveedor.Fecha))"></ValidationMessage>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Días de Entrega</label>
+                        <select class="form-select input-glass">
+                            <option>Diario</option>
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Nombre / Razón Social</label>
+                        <InputText class="form-control input-glass" @bind-Value="proveedor.Nombre" placeholder="Ej: Distribuidora Lo Mameye" />
+                        <ValidationMessage For="@(() => (proveedor.Nombre))"></ValidationMessage>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Teléfono</label>
+                        <InputText class="form-control input-glass" @bind-Value="proveedor.Telefono" placeholder="Ej: 809-555-1234" />
+                        <ValidationMessage For="@(() => (proveedor.Telefono))"></ValidationMessage>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Correo Electrónico</label>
+                        <InputText class="form-control input-glass" @bind-Value="proveedor.Correo" placeholder="Ej: Empresa@gmail.com" />
+                        <ValidationMessage For="@(() => (proveedor.Correo))"></ValidationMessage>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Dirección</label>
+                        <InputText class="form-control input-glass" @bind-Value="proveedor.Dirrecion" placeholder="Dirección del local..." />
+                        <ValidationMessage For="@(() => (proveedor.Dirrecion))"></ValidationMessage>
+                    </div>
+
+                    <div class="col-12 d-flex justify-content-between mt-4">
+                        <a href="/Proveedor/Index" class="btn btn-outline-secondary rounded-3 px-4">Volver</a>
+                        @if (crear == "Editar")
+                        {
+                            <button type="button" class="btn btn-outline-danger me-2" @onclick="Eliminar">
+                                <i class="bi bi-trash"></i> Eliminar
+                            </button>
+                        }
+                        <button type="submit" class="btn btn-success rounded-3 px-5" style="background-color: #4c7c4c; border: none;">Guardar</button>
+                    </div>
+
                 </div>
+            </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Días de Entrega</label>
-                    <select class="form-select input-glass">
-                        <option>Diario</option>
-                    </select>
-                </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Nombre / Razón Social</label>
-                    <InputText class="form-control input-glass" @bind-Value="proveedor.Nombre" placeholder="Ej: Distribuidora Lo Mameye" />
-                </div>
 
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Teléfono</label>
-                    <InputText class="form-control input-glass" @bind-Value="proveedor.Telefono" placeholder="Ej: 809-555-1234" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Correo Electrónico</label>
-                    <InputText class="form-control input-glass" @bind-Value="proveedor.Correo" placeholder="Ej: Empresa@gmail.com" />
-                </div>
-
-                <div class="col-md-6">
-                    <label class="form-label fw-bold">Dirección</label>
-                    <InputText class="form-control input-glass" @bind-Value="proveedor.Dirrecion" placeholder="Dirección del local..." />
-                </div>
-
-                <div class="col-12 d-flex justify-content-between mt-4">
-                    <a href="/Proveedor/Index" class="btn btn-outline-secondary rounded-3 px-4" >Volver</a>
-                    @if(crear == "Editar")
-                    {
-                        <button type="button" class="btn btn-outline-danger me-2" @onclick="Eliminar">
-                            <i class="bi bi-trash"></i> Eliminar
-                        </button>
-                    }
-                    <button class="btn btn-success rounded-3 px-5" style="background-color: #4c7c4c; border: none;" @onclick="Guardar">Guardar</button>
-                </div>
-
-            </div> 
-        </div>
-    </div> 
+        </EditForm>
+    </div>
 </div>
 
 @code {
@@ -78,15 +89,23 @@
 
     public async Task Guardar()
     {
-        var ok = await proveedoresServices.Guardar(proveedor);
-
-        if(ok)
+        try
         {
-            navigationManager.NavigateTo("/Proveedor/Index");
+            var ok = await proveedoresServices.Guardar(proveedor);
+
+            if (ok)
+            {
+                navigationManager.NavigateTo("/Proveedor/Index");
+            }
+        }
+        catch(Exception ex)
+        {
+            Console.WriteLine(ex.Message);
         }
 
+
     }
-    
+
     public async Task Eliminar()
     {
         var ok = await proveedoresServices.Eliminar(proveedor.ProveedorId);
@@ -99,3 +118,4 @@
     }
 
 }
+
