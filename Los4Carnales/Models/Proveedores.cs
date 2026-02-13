@@ -11,6 +11,15 @@ public class Proveedores
     [Required(ErrorMessage = "Campo obligatorio")]
     public string Nombre { get; set; }
 
+    [Required(ErrorMessage = "Campo obligatorio")]
+    public string Correo { get; set; }
+
+    [Required(ErrorMessage = "Campo obligatorio")]
+    public string Dirrecion { get; set; }
+
+    [Required(ErrorMessage = "Campo obligatorio")]
+    public DateTime Fecha { get; set; }
+
     [Required(ErrorMessage = "El teléfono es obligatorio.")]
     [RegularExpression(@"^(809|829|849)-\d{3}-\d{4}$",
         ErrorMessage = "El teléfono debe tener el formato 809-000-0000 y comenzar con 809, 829 o 849.")]
