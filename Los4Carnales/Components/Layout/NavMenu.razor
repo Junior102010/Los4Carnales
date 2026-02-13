@@ -15,20 +15,44 @@
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+            <NavLink class="nav-link" href="/Resumen" Match="NavLinkMatch.All">
+                <span class="bi bi-bar-chart-line" aria-hidden="true"></span> Resumen
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/Almacen" Match="NavLinkMatch.All">
+                <span class="bi bi-inbox-fill" aria-hidden="true"></span> Almacen
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/Pedido/Index">
+                <span class="bi bi-cart3" aria-hidden="true"></span> Facturación
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/Transferencia/Index">
+                <span class="bi bi-credit-card" aria-hidden="true"></span> Transferencias
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/Admin/Mayoristas">
+                <span class="bi bi-buildings" aria-hidden="true"></span> Mayoristas
+            </NavLink>
+        </div>
+
+        <div class="nav-item px-3">
+            <NavLink class="nav-link" href="/Logistica/Index">
+                <span class="bi bi-bezier2" aria-hidden="true"></span> Logistica
             </NavLink>
         </div>
 
         <div class="nav-item px-3">
             <NavLink class="nav-link" href="/Proveedor/Index">
                 <span class='bi bi-truck' aria-hidden="true"></span> Proveedores
-            </NavLink>
-        </div>
-
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="auth">
-                <span class="bi bi-lock-nav-menu" aria-hidden="true"></span> Auth Required
             </NavLink>
         </div>
 
@@ -52,13 +76,13 @@
             <NotAuthorized>
                 <div class="nav-item px-3">
                     <NavLink class="nav-link" href="Account/Register">
-                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Register
+                        <span class="bi bi-person-nav-menu" aria-hidden="true"></span> Cuenta
                     </NavLink>
                 </div>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="Account/Login">
-                        <span class="bi bi-person-badge-nav-menu" aria-hidden="true"></span> Login
-                    </NavLink>
+                    <button type="submit" class="nav-link">
+                        <span class="bi bi-arrow-bar-left-nav-menu" aria-hidden="true"></span> Logout
+                    </button>
                 </div>
             </NotAuthorized>
         </AuthorizeView>
