@@ -4,7 +4,6 @@ using Los4Carnales.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
-using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -12,11 +11,9 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Los4Carnales.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260213023301_Proveedores1")]
-    partial class Proveedores1
+    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
     {
-        /// <inheritdoc />
-        protected override void BuildTargetModel(ModelBuilder modelBuilder)
+        protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -91,20 +88,6 @@ namespace Los4Carnales.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Los4Carnales.Models.Categorias", b =>
-                {
-                    b.Property<int>("CategoriaId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("CategoriaId");
-
-                    b.ToTable("categorias");
-                });
-
             modelBuilder.Entity("Los4Carnales.Models.Proveedores", b =>
                 {
                     b.Property<int>("ProveedorId")
@@ -134,7 +117,7 @@ namespace Los4Carnales.Migrations
 
                     b.HasKey("ProveedorId");
 
-                    b.ToTable("proveedores");
+                    b.ToTable("Proveedores");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -291,15 +274,6 @@ namespace Los4Carnales.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Los4Carnales.Models.Categorias", b =>
-                {
-                    b.HasOne("Los4Carnales.Models.Proveedores", null)
-                        .WithMany("ProveedorDetalle")
-                        .HasForeignKey("CategoriaId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -400,11 +374,6 @@ namespace Los4Carnales.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("Los4Carnales.Models.Proveedores", b =>
-                {
-                    b.Navigation("ProveedorDetalle");
                 });
 #pragma warning restore 612, 618
         }

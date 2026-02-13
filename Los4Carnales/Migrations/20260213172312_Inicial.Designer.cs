@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Los4Carnales.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260213155924_SolucionProveedor")]
-    partial class SolucionProveedor
+    [Migration("20260213172312_Inicial")]
+    partial class Inicial
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -91,23 +91,6 @@ namespace Los4Carnales.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("Los4Carnales.Models.Categorias", b =>
-                {
-                    b.Property<int>("CategoriaId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoriaId"));
-
-                    b.Property<string>("Nombre")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("CategoriaId");
-
-                    b.ToTable("categorias");
-                });
-
             modelBuilder.Entity("Los4Carnales.Models.Proveedores", b =>
                 {
                     b.Property<int>("ProveedorId")
@@ -137,7 +120,7 @@ namespace Los4Carnales.Migrations
 
                     b.HasKey("ProveedorId");
 
-                    b.ToTable("proveedores");
+                    b.ToTable("Proveedores");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
