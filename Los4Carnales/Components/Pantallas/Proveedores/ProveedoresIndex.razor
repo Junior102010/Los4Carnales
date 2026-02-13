@@ -35,7 +35,7 @@
                 <div class="col-md-1"></div>
 
                 <div class="col-md-4 text-end">
-                    <a href="/Proveedor/Create" class="btn btn-gradiente px-4 shadow-sm">
+                    <a href="/Proveedores/Create/0" class="btn btn-gradiente px-4 shadow-sm">
                         <span class="bi bi-plus-square"></span> Crear
                     </a>
                 </div>
@@ -46,10 +46,10 @@
                     <thead class="text-black" style="background-color: rgba(0,0,0,0.03); border-bottom: 2px solid rgba(0,0,0,0.1);">
                         <tr>
                             <th class="py-3 ps-3">ID</th>
-                            <th class="py-3">RNC</th>
                             <th class="py-3">Nombre</th>
                             <th class="py-3">Email</th>
                             <th class="py-3 text-center">Teléfono</th>
+                            <th class="py-3">Dirrecion</th>
                             <th class="py-3 text-center">Opciones</th>
                         </tr>
                     </thead>
@@ -59,9 +59,11 @@
                             <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
                                 <td class="ps-3 fw-bold text-muted">@item.ProveedorId</td>
                                 <td>@item.Nombre</td>
+                                <td>@item.Correo</td>
                                 <td class="text-center">@item.Telefono</td>
+                                <td>@item.Dirrecion</td>
                                 <td class="text-center">
-                                    <a href="/Proveedor/Edit/@item.ProveedorId" class="btn btn-sm btn-outline-success border-0 bi bi-pencil-square fs-5"></a>
+                                    <a href="/Proveedores/Create/@item.ProveedorId" class="btn btn-sm btn-outline-success border-0 bi bi-pencil-square fs-5"></a>
                                 </td>
                             </tr>
                         }
