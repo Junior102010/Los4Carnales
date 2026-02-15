@@ -361,3 +361,7 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+/Los4Carnales/Migrations/20260215134400_EliminadoLogico.cs
+/Los4Carnales/Migrations/20260215134400_EliminadoLogico.Designer.cs
+/Los4Carnales/Migrations/20260215135039_EliminadoLogico2.cs
+/Los4Carnales/Migrations/20260215135039_EliminadoLogico2.Designer.cs
