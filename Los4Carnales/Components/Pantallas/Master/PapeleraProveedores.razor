@@ -1,0 +1,222 @@
+﻿@page "/Master/Proveedores"
+
+@using Los4Carnales.Models
+@using Los4Carnales.Services
+@using Los4Carnales.Components.Layout
+
+@rendermode InteractiveServer
+@inject ProveedoresServices proveedoresService
+@inject NavigationManager navigationManager
+@inject IJSRuntime JS
+
+
+@layout EmptyLayout
+
+<div class="master-container">
+    
+ 
+    <div class="sidebar-master">
+        <div class="brand-logo">
+           
+            <img src="Imagenes/Logo.png" alt="Logo" style="height: 140px; width: auto;" />
+        </div>
+
+        <nav class="nav-master">
+            <div class="nav-item-master">
+                <i class="bi bi-bar-chart-fill"></i> Resumen
+            </div>
+            <div class="nav-item-master">
+                <i class="bi bi-box-seam-fill"></i> Almacen
+            </div>
+            
+
+            <div class="nav-item-master active">
+                <i class="bi bi-truck-front-fill"></i> Proveedores
+            </div>
+            
+            <div class="nav-item-master">
+                <i class="bi bi-people-fill"></i> Usuarios
+            </div>
+            
+            <div style="margin-top: auto; margin-bottom: 30px;">
+                <a href="/" class="nav-item-master">
+                    <i class="bi bi-box-arrow-left"></i> Salir al Sistema
+                </a>
+            </div>
+        </nav>
+    </div>
+
+   
+    <div class="main-content-master">
+        
+       
+        <div class="top-header-master">
+            Papelería de Proveedores
+        </div>
+
+        <div class="content-body">
+            
+           
+            <div class="controls-bar">
+                <div class="d-flex gap-4">
+
+                    <div>
+                        <div class="filter-label">Filtrar por:</div>
+                        <select class="input-custom" @bind="CriterioFiltro">
+                            <option value="Nombre">Nombre</option>
+                            <option value="Correo">Correo</option>
+                            <option value="Telefono">Teléfono</option>
+                        </select>
+                    </div>
+
+              
+                    <div>
+                        <div class="filter-label">Buscar</div>
+                        <div class="d-flex gap-1">
+                            <input type="text" class="input-custom" placeholder="Escribe para buscar..." 
+                                   @bind="TextoBusqueda" @bind:event="oninput" style="width: 250px;">
+                            <button class="input-custom bg-white border"><i class="bi bi-search"></i></button>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="badge-counter">
+                    <i class="bi bi-trash3-fill"></i>
+                    <div>
+                        <div class="fs-4 fw-bold lh-1 text-dark">@ListaFiltrada.Count</div>
+                        <small class="text-muted">Eliminados</small>
+                    </div>
+                </div>
+            </div>
+
+            
+            <div class="big-card-container">
+                
+             
+                <div class="table-header">
+                    <div style="width: 50px;">ID</div>
+                    <div style="width: 25%;">Proveedor / Correo</div>
+                    <div style="width: 25%;">Contacto / Dirección</div>
+                    <div style="width: 15%;">Fecha Reg.</div>
+                    <div style="width: 15%; text-align: center;">Estado</div>
+                    <div style="width: 120px; text-align: right;">Opciones</div>
+                </div>
+
+               
+                @if (ListaProveedores.Count == 0)
+                {
+                    <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted mt-5">
+                        <i class="bi bi-inbox fs-1 mb-3"></i>
+                        <h4>La papelera está vacía</h4>
+                        <p>No hay proveedores eliminados recientemente.</p>
+                    </div>
+                }
+                else
+                {
+                    @foreach (var item in ListaFiltrada)
+                    {
+                        <div class="data-row">
+                           
+                            <div class="col-id">@item.ProveedorId</div>
+                            
+                            
+                            <div class="col-name">
+                                <div class="fw-bold">@item.Nombre</div>
+                                <small class="text-muted"><i class="bi bi-envelope"></i> @item.Correo</small>
+                            </div>
+                            
+                            
+                            <div class="col-contact">
+                                <div class="fw-bold text-dark"><i class="bi bi-telephone"></i> @item.Telefono</div>
+                                <small class="text-muted"><i class="bi bi-geo-alt"></i> @item.Dirrecion</small>
+                            </div>
+
+                           
+                            <div class="col-date">
+                                @item.Fecha.ToString("dd/MM/yyyy")
+                            </div>
+                            
+                            
+                            <div class="col-status">
+                                X Eliminado
+                            </div>
+                            
+                           
+                            <div class="col-actions">
+                              
+                                <button class="action-btn btn-restore" title="Restaurar al sistema" 
+                                        @onclick="() => Restaurar(item.ProveedorId)">
+                                    <i class="bi bi-arrow-counterclockwise"></i>
+                                </button>
+                                
+                               
+                                <button class="action-btn btn-delete" title="Eliminar definitivamente" 
+                                        @onclick="() => EliminarDefinitivamente(item.ProveedorId)">
+                                    <i class="bi bi-trash3-fill"></i>
+                                </button>
+                            </div>
+                        </div>
+                    }
+                }
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Proveedores> ListaProveedores { get; set; } = new List<Proveedores>();
+    
+    public string TextoBusqueda { get; set; } = "";
+    public string CriterioFiltro { get; set; } = "Nombre";
+
+    
+    public List<Proveedores> ListaFiltrada
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(TextoBusqueda))
+                return ListaProveedores;
+
+        
+            switch (CriterioFiltro)
+            {
+                case "Correo":
+                    return ListaProveedores.Where(p => p.Correo.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+                case "Telefono":
+                    return ListaProveedores.Where(p => p.Telefono.Contains(TextoBusqueda)).ToList();
+                default: 
+                    return ListaProveedores.Where(p => p.Nombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        ListaProveedores = await proveedoresService.ListarPapelera();
+    }
+
+    private async Task Restaurar(int id)
+    {
+        var exito = await proveedoresService.Restaurar(id);
+        if (exito) await CargarDatos();
+    }
+
+    private async Task EliminarDefinitivamente(int id)
+    {
+        bool confirmar = await JS.InvokeAsync<bool>("confirm", "⚠️ ¿Estás seguro de eliminar este proveedor PERMANENTEMENTE? No se podrá recuperar.");
+        
+        if (confirmar)
+        {
+            var exito = await proveedoresService.EliminarPermanente(id);
+            if (exito) await CargarDatos();
+        }
+    }
+}
