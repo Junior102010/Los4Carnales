@@ -2,10 +2,18 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Los4Carnales.Models;
 
-namespace Los4Carnales.Data
+namespace Los4Carnales.Data;
+
+public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
 {
-    public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : IdentityDbContext<ApplicationUser>(options)
+    public DbSet<Proveedores> Proveedores { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        public DbSet<Proveedores> Proveedores { get; set; }
+        base.OnModelCreating(modelBuilder);
+
+
+        modelBuilder.Entity<Proveedores>().HasQueryFilter(p => !p.Eliminado);
     }
+
 }
