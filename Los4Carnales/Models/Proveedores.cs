@@ -25,5 +25,7 @@ public class Proveedores
         ErrorMessage = "El teléfono debe tener el formato 809-000-0000 y comenzar con 809, 829 o 849.")]
     public string Telefono { get; set; } = string.Empty;
 
+    public bool Eliminado { get; set; } = false;
+
 }
 

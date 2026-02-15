@@ -62,9 +62,49 @@ public class ProveedoresServices(IDbContextFactory<ApplicationDbContext> DbFacto
     public async Task<bool> Eliminar(int id)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        var proveedor = await contexto.Proveedores.FindAsync(id);
+        if (proveedor == null)
+            return false;
+        proveedor.Eliminado = true;
+        contexto.Update(proveedor);
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    //Eliminado logico
+    public async Task<List<Proveedores>> ListarPapelera()
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.Proveedores
+            .IgnoreQueryFilters()
+            .Where(p => p.Eliminado)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<bool> Restaurar(int id) 
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var proveedor = await contexto.Proveedores
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(p => p.ProveedorId == id);
+
+        if (proveedor == null)
+            return false;
+        proveedor.Eliminado = false;
+        contexto.Proveedores.Update(proveedor);
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminarPermanente(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        return await contexto.Proveedores
+            .IgnoreQueryFilters()
             .Where(p => p.ProveedorId == id)
             .ExecuteDeleteAsync() > 0;
+
     }
 
 }
