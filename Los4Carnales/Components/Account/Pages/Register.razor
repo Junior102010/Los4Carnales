@@ -151,6 +151,7 @@
 
     private sealed class InputModel
     {
+
         [Required]
         [Display(Name = "Nombre")]
         public string Nombre { get; set; } = "";
@@ -163,7 +164,6 @@
         [Phone]
         [Display(Name = "Teléfono")]
         public string Telefono { get; set; } = "";
-
         [Required]
         [EmailAddress]
         [Display(Name = "Email")]
