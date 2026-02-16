@@ -2,6 +2,7 @@
 @inject ProveedoresServices proveedoresServices
 @inject NavigationManager navigationManager
 @rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
 
 <PageTitle>Proveedores</PageTitle>
 <div class="container mt-4">

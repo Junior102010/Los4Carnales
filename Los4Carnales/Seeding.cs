@@ -8,14 +8,11 @@ public static class SeedData
 {
     public static async Task InitializeAsync(IServiceProvider serviceProvider)
     {
-        // 1. Obtener los servicios necesarios
         var userManager = serviceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // 2. Definir los roles que quieres crear
+        // 1. Definir y crear roles
         string[] roleNames = { "Administrador", "Master" };
-
-        // Crear los roles si no existen
         foreach (var roleName in roleNames)
         {
             if (!await roleManager.RoleExistsAsync(roleName))
@@ -24,39 +21,53 @@ public static class SeedData
             }
         }
 
-        // 3. Crear un usuario Administrador (si no existe)
-        const string adminEmail = "admin@gmail.com"; // Usar minúsculas es más seguro
-        const string adminPassword = "@Clave123";
+        // 2. Crear cuenta Administrador
+        await CreateUserIfNotExist(userManager,
+            "admin@gmail.com",
+            "@Clave123",
+            "Administrador",
+            "Principal",
+            "Administrador");
 
-        if (await userManager.FindByEmailAsync(adminEmail) == null)
+        // 3. Crear cuenta Master 🔑
+        await CreateUserIfNotExist(userManager,
+            "master@gmail.com",
+            "@ClaveMaster123",
+            "Master",
+            "Sistema",
+            "Master");
+    }
+
+    private static async Task CreateUserIfNotExist(
+        UserManager<ApplicationUser> userManager,
+        string email,
+        string password,
+        string nombre,
+        string apellido,
+        string role)
+    {
+        if (await userManager.FindByEmailAsync(email) == null)
         {
-            var adminUser = new ApplicationUser
+            var user = new ApplicationUser
             {
-                UserName = adminEmail,
-                Email = adminEmail,
+                UserName = email,
+                Email = email,
                 EmailConfirmed = true,
-
-                // 🔑 INICIALIZACIÓN DE CAMPOS REQUERIDOS DE CLIENTE/USUARIO:
-                // Si ApplicationUser heredó o implementó campos [Required] de tu modelo Cliente,
-                // DEBEN inicializarse aquí para que CreateAsync no falle.
-                Nombre = "Administrador",
-                Apellido = "Principal",
-                Telefono = "8090000000",
+                Nombre = nombre,
+                Apellido = apellido,
+                Telefono = "8090000000" // Valor por defecto o parámetro adicional
             };
 
-            var result = await userManager.CreateAsync(adminUser, adminPassword);
+            var result = await userManager.CreateAsync(user, password);
 
             if (result.Succeeded)
             {
-                // 4. Asignar el rol de "Administrador"
-                await userManager.AddToRoleAsync(adminUser, "Administrador");
+                await userManager.AddToRoleAsync(user, role);
             }
             else
             {
-                // 🚨 CÓDIGO DE MANEJO DE ERRORES: Muestra la causa exacta del fallo 🚨
                 var errors = string.Join(", ", result.Errors.Select(e => e.Description));
-
-                throw new InvalidOperationException($"El seeding del Admin falló: {errors} Verifique los requisitos...");
+                throw new InvalidOperationException($"Fallo al crear el usuario {email}: {errors}");
             }
         }
     }
