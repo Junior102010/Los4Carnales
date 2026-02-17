@@ -86,6 +86,10 @@
         {
             proveedor = await proveedoresServices.Buscar(ProveedorId);
         }
+        else
+        {
+            proveedor.Fecha = DateTime.Today;
+        }
     }
 
     public async Task Guardar()
