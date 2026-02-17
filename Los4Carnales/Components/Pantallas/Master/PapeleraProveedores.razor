@@ -8,7 +8,7 @@
 @inject ProveedoresServices proveedoresService
 @inject NavigationManager navigationManager
 @inject IJSRuntime JS
-
+@attribute [Authorize(Roles = "Master")]
 
 @layout EmptyLayout
 
