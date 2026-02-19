@@ -5,7 +5,7 @@ using Los4Carnales.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using ProyectoFinalAplicada1;
+using Los4Carnales;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +46,16 @@ builder.Services.AddIdentityCore<ApplicationUser>(options =>
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
 
 builder.Services.AddScoped<ProveedoresServices>();
+builder.Services.AddScoped<ProductosServices>();
+builder.Services.AddScoped<EntradasServices>();
+builder.Services.AddScoped<PedidosServices>();
+builder.Services.AddScoped<UsuarioServices>();
+builder.Services.AddScoped<ClientesServices>();
+builder.Services.AddScoped<PageTitleService>();
+builder.Services.AddScoped<TranferenciaServices>();
+builder.Services.AddScoped<CarritoService>();
+builder.Services.AddScoped<AbonosService>();
+builder.Services.AddScoped<ConfiguracionService>();
 
 var app = builder.Build();
 
