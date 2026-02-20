@@ -1,7 +1,6 @@
 ﻿@page "/Producto/Create"
 @using Microsoft.AspNetCore.Authorization
 
-
 @inject ProductosServices productosService
 @inject ConfiguracionService configService
 @inject NavigationManager navigationManager
@@ -20,17 +19,24 @@
 
             <div class="card-body">
 
-                @* --- FILA 1: DATOS BÁSICOS --- *@
+                @* --- FILA 1: DATOS BÁSICOS (Ajustado a 3 columnas) --- *@
                 <div class="row mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Nombre del Producto</label>
-                        <InputText class="form-control input-glass" @bind-Value="Producto.NombreProducto" placeholder="Ej: Arroz Super Selecto" />
+                        @* Agregamos el evento :after para generar la etiqueta al escribir *@
+                        <InputText class="form-control input-glass"
+                                   @bind-Value="Producto.NombreProducto"
+                                   @bind-Value:after="GenerarEtiqueta"
+                                   placeholder="Ej: Pollo Entero" />
                         <ValidationMessage For="(() => Producto.NombreProducto)" />
                     </div>
 
-                    <div class="col-md-6 mb-3">
+                    <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Categoría</label>
-                        <InputSelect class="form-select input-glass" @bind-Value="Producto.Categoria">
+                        @* Agregamos el evento :after para generar la etiqueta al seleccionar *@
+                        <InputSelect class="form-select input-glass"
+                                     @bind-Value="Producto.Categoria"
+                                     @bind-Value:after="GenerarEtiqueta">
                             <option value="" selected disabled>Seleccione una categoría</option>
                             <option value="Carnes">Carnes</option>
                             <option value="Granos">Granos</option>
@@ -47,9 +53,13 @@
                         <ValidationMessage For="(() => Producto.Categoria)" />
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="form-label text-muted small fw-bold mb-1">Etiqueta</label>
-                        <InputText class="form-control input-glass" @bind-Value="Producto.Etiqueta" placeholder="Ej: #05" />
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-bold mb-1">Etiqueta (Auto-generada)</label>
+                        @* Se le agrega readonly para que no se pueda modificar manualmente *@
+                        <InputText class="form-control input-glass text-primary fw-bold"
+                                   @bind-Value="Producto.Etiqueta"
+                                   readonly
+                                   placeholder="Ej: PCA0000" />
                         <ValidationMessage For="(() => Producto.Etiqueta)" />
                     </div>
                 </div>
@@ -93,10 +103,8 @@
                 @* --- FILA 3: UNIDADES (DINÁMICO) Y EXISTENCIA --- *@
                 <div class="row mb-3">
 
-                    @* Unidad de Medida Dinámica *@
                     <div class="col-md-6">
                         <label class="form-label text-muted small fw-bold mb-1">Unidad de Medida</label>
-
                         <div class="input-group">
                             <InputSelect class="form-select input-glass" @bind-Value="Producto.UnidadMedida">
                                 <option value="" selected disabled>Elija unidad</option>
@@ -105,7 +113,6 @@
                                     <option value="@u.Abreviatura">@u.Descripcion (@u.Abreviatura)</option>
                                 }
                             </InputSelect>
-                            @* Acceso directo para crear nueva unidad *@
                             <a href="/Unidades/Index" class="btn btn-outline-secondary" title="Gestionar Unidades">
                                 <i class="bi bi-gear"></i>
                             </a>
@@ -134,7 +141,7 @@
                 <a href="/Almacen" class="btn btn-outline-secondary px-4">
                     <span class="bi bi-arrow-left"></span> Volver
                 </a>
-                <button type="submit" class="btn btn-gradiente px-5" >
+                <button type="submit" class="btn btn-gradiente px-5">
                     <span class="bi bi-floppy"></span> Guardar
                 </button>
             </div>
@@ -142,11 +149,11 @@
         </div>
     </div>
 </EditForm>
+
 @code {
     public Producto Producto { get; set; } = new Producto();
     public string Mensaje { get; set; } = string.Empty;
 
-    // Lista para llenar el combo
     public List<UnidadMedida> ListaUnidades { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
@@ -154,35 +161,50 @@
         PageTitleService.SetTitle("Crear Producto");
         Producto.Existencia = 0;
 
-        // Cargar unidades desde la base de datos
-
-        //PONER DATOS EN LO QUE HACEMOS LAS PANTALLAS UNIDAD DE MEDIDA
         ListaUnidades.Add(new UnidadMedida(1, "Kilogramos", "Kg"));
         ListaUnidades.Add(new UnidadMedida(2, "Libra", "Libra"));
+    }
+
+    // --- LÓGICA DE AUTO-GENERACIÓN DE ETIQUETA ---
+    private void GenerarEtiqueta()
+    {
+        // Solo genera si ambos campos (Nombre y Categoría) ya tienen algún dato
+        if (!string.IsNullOrWhiteSpace(Producto.NombreProducto) && !string.IsNullOrWhiteSpace(Producto.Categoria))
+        {
+            // 1. Obtener primera letra del nombre (Ej: "Pollo" -> "P")
+            string letraNombre = Producto.NombreProducto.Substring(0, 1).ToUpper();
+
+            // 2. Obtener las primeras 2 letras de la categoría (Ej: "Carnes" -> "CA")
+            string letrasCat = Producto.Categoria.Length >= 2
+                                ? Producto.Categoria.Substring(0, 2).ToUpper()
+                                : Producto.Categoria.ToUpper();
+
+            // 3. Generar una numeración de 4 dígitos (Ej: 0045, 1023)
+            string numeracion = Random.Shared.Next(1, 10000).ToString("D4");
+
+            // 4. Unir todo (Ej: PCA0045)
+            Producto.Etiqueta = $"{letraNombre}{letrasCat}{numeracion}";
+        }
     }
 
     public async Task Guardar()
     {
         Mensaje = string.Empty;
-        Console.WriteLine("Se silencio el mensaje");
         if (Producto.Costo < 0 || Producto.Precio < 0 || Producto.PrecioEmpresa < 0)
         {
             Mensaje = "Los precios y costos no pueden ser negativos.";
-            Console.WriteLine("Paso");
             return;
         }
-        Console.WriteLine(Producto.ProductoId);
+
         var guardado = await productosService.Guardar(Producto);
 
         if (guardado)
         {
             navigationManager.NavigateTo("/Almacen");
-            Console.WriteLine("Guardado");
         }
         else
         {
             Mensaje = "Ocurrió un error al intentar guardar el producto.";
-            Console.WriteLine("Error");
         }
     }
 }
