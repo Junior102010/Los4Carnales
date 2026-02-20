@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace ProyectoFinalAplicada1;
+namespace Los4Carnales;
 
 public static class SeedData
 {
