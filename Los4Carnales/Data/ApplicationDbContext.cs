@@ -39,7 +39,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithOne()
             .HasForeignKey<Cliente>(c => c.UserId)
             .IsRequired();
-        modelBuilder.Ignore<ApplicationUser>();
 
         modelBuilder.Entity<Proveedores>().HasQueryFilter(p => !p.Eliminado);
         modelBuilder.Entity<Pedido>().HasQueryFilter(p => !p.Eliminado);
@@ -52,6 +51,18 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<UnidadMedida>().HasQueryFilter(u => !u.Eliminado);
         modelBuilder.Entity<Sector>().HasQueryFilter(s => !s.Eliminado);
         modelBuilder.Entity<Factura>().HasQueryFilter(f => !f.Eliminado);
+
+        modelBuilder.Entity<EntradaDetalle>()
+        .HasOne(ed => ed.Producto)
+        .WithMany()
+        .HasForeignKey(ed => ed.ProductoId)
+        .IsRequired(false); // Esto evita que truene si el producto está "oculto" por el filtro
+
+        modelBuilder.Entity<PedidoDetalle>()
+            .HasOne(pd => pd.Producto)
+            .WithMany()
+            .HasForeignKey(pd => pd.ProductoId)
+            .IsRequired(false);
     }
     
 
