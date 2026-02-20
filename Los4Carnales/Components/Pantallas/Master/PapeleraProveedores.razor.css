@@ -1,99 +1,8 @@
 ﻿/* =========================================
-   ESTILOS EXCLUSIVOS PARA EL PANEL MASTER
+   ESTILOS EXCLUSIVOS PARA PROVEEDORES
    ========================================= */
 
-:root {
-    --master-sidebar-bg: #23120b;
-    --master-sidebar-text: #eecfa1;
-    --master-top-bg: #796e65;
-    --master-bg: #fffbf0;
-    --master-card-border: #5d4037;
-    --status-deleted: #e53935;
-}
-
-.master-container {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-    background-color: var(--master-bg);
-    font-family: 'Poppins', 'Segoe UI', sans-serif;
-    overflow: hidden;
-    position: fixed;
-    top: 0;
-    left: 0;
-}
-
-/* --- SIDEBAR --- */
-.sidebar-master {
-    width: 260px;
-    height: 100%;
-    background-color: #23120b;
-    display: flex;
-    flex-direction: column;
-    padding-top: 1.5rem;
-    box-shadow: 4px 0 15px rgba(0,0,0,0.3);
-    z-index: 10;
-}
-
-.brand-logo {
-    text-align: center;
-    margin-bottom: 2rem;
-}
-
-    .brand-logo img {
-        width: 100px;
-        height: 100px;
-        border-radius: 50%;
-        border: 3px solid #eecfa1;
-        object-fit: cover;
-    }
-
-.nav-master {
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
-}
-
-.nav-item-master {
-    color: #eecfa1;
-    padding: 12px 25px;
-    text-decoration: none;
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    font-weight: 500;
-    transition: all 0.3s;
-    font-size: 0.95rem;
-    cursor: pointer;
-}
-
-    .nav-item-master:hover {
-        background-color: rgba(255,255,255,0.08);
-        color: #fff;
-        padding-left: 30px;
-    }
-
-    .nav-item-master.active {
-        color: #ffb74d;
-        font-weight: 700;
-        background: linear-gradient(90deg, rgba(255, 183, 77, 0.1) 0%, transparent 100%);
-        border-left: 4px solid #ffb74d;
-    }
-
-    .nav-item-master i {
-        font-size: 1.2rem;
-        width: 25px;
-        text-align: center;
-    }
-
-/* --- MAIN CONTENT --- */
-.main-content-master {
-    flex-grow: 1;
-    display: flex;
-    flex-direction: column;
-    background-color: #fffbf0;
-}
-
+/* --- CABECERA DE LA PANTALLA --- */
 .top-header-master {
     background-color: #796e65;
     color: #fff;
@@ -111,7 +20,7 @@
     flex-grow: 1;
 }
 
-/* Controls */
+/* --- BARRA DE CONTROLES Y FILTROS --- */
 .controls-bar {
     display: flex;
     justify-content: space-between;
@@ -152,7 +61,7 @@
         font-size: 1.5rem;
     }
 
-/* --- DATA CARD CONTAINER --- */
+/* --- CONTENEDOR PRINCIPAL DE LA TABLA (BIG CARD) --- */
 .big-card-container {
     border: 2px solid #5d4037;
     border-radius: 25px;
@@ -175,7 +84,7 @@
     border-radius: 8px;
 }
 
-/* --- DATA ROW --- */
+/* --- FILAS DE DATOS (DATA ROWS) --- */
 .data-row {
     background-color: white;
     border: 1px solid #424242;
@@ -195,7 +104,7 @@
         border-color: #5d4037;
     }
 
-/* Estilos de Columnas ajustados al modelo */
+/* --- COLUMNAS DE LA TABLA --- */
 .col-id {
     font-weight: 700;
     width: 50px;
@@ -237,6 +146,7 @@
     width: 120px;
 }
 
+/* --- BOTONES DE ACCIÓN (Restaurar / Eliminar) --- */
 .action-btn {
     background: none;
     border: none;
