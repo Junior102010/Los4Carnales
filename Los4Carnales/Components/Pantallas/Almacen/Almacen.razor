@@ -25,6 +25,7 @@
                         <option value="" selected disabled>Elija una opción</option>
                         <option value="Nombre">Nombre</option>
                         <option value="Categoria">Categoría</option>
+                        <option value="Etiqueta">Etiqueta</option>
                     </InputSelect>
                 </div>
 
@@ -139,6 +140,11 @@
             {
                 ListaProductos = await productosService.Listar(
                     p => p.Categoria != null && p.Categoria.ToLower().Contains(ValorFiltro.ToLower()));
+            }
+            else if (Filtro == "Etiqueta")
+            {
+                ListaProductos = await productosService.Listar(
+                    p => p.Etiqueta != null && p.Etiqueta.ToLower().Contains(ValorFiltro.ToLower()));
             }
         }
         else
