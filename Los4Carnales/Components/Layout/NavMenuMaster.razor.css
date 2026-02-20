@@ -1,0 +1,69 @@
+﻿/* --- CONTENEDOR DEL MENÚ LATERAL --- */
+.sidebar-master {
+    width: 260px;
+    height: 100%;
+    background-color: #23120b; /* Color chocolate de fondo */
+    display: flex;
+    flex-direction: column;
+    padding-top: 1.5rem;
+    box-shadow: 4px 0 15px rgba(0,0,0,0.3);
+    z-index: 10;
+}
+
+/* --- LOGO --- */
+.brand-logo {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+    .brand-logo img {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        border: 3px solid #eecfa1;
+        object-fit: cover;
+    }
+
+.nav-master {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+/* --- OPCIONES DEL MENÚ (COMO TEXTO NORMAL) --- */
+::deep .nav-item-master {
+    color: #eecfa1 !important; /* Color crema para las letras */
+    text-decoration: none !important; /* QUITA LA LÍNEA DE SUBRAYADO DEL LINK */
+    padding: 12px 25px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-weight: 500;
+    transition: all 0.3s;
+    font-size: 0.95rem;
+    cursor: pointer;
+    background-color: transparent;
+}
+
+    /* Efecto al pasar el mouse por encima */
+    ::deep .nav-item-master:hover {
+        background-color: rgba(255,255,255,0.08) !important; /* Sombra ligera, no crema sólido */
+        color: #fff !important; /* Letra blanca */
+        text-decoration: none !important; /* Mantiene el link sin línea */
+        padding-left: 30px;
+    }
+
+    /* Efecto cuando la opción está seleccionada */
+    ::deep .nav-item-master.active {
+        color: #ffb74d !important; /* Letra naranja */
+        font-weight: 700;
+        background: linear-gradient(90deg, rgba(255, 183, 77, 0.1) 0%, transparent 100%) !important;
+        border-left: 4px solid #ffb74d !important;
+    }
+
+    /* Iconos del menú */
+    ::deep .nav-item-master i {
+        font-size: 1.2rem;
+        width: 25px;
+        text-align: center;
+    }

@@ -1,0 +1,20 @@
+﻿/* Contenedor principal de toda la pantalla */
+.master-container {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    background-color: #fffbf0; /* Color crema de fondo */
+    font-family: 'Poppins', 'Segoe UI', sans-serif;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+}
+
+/* Donde se inyecta el contenido de las pantallas */
+.main-content-master {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    background-color: #fffbf0;
+}

@@ -1,0 +1,52 @@
+﻿@rendermode InteractiveServer
+
+<div class="sidebar-master">
+    <div class="brand-logo">
+        <img src="@rutaLogoActual"
+             @onclick="CambiarLogo"
+             alt="Logo"
+             style="height: 140px; width: auto; cursor: pointer;" />
+    </div>
+
+    <nav class="nav-master">
+        <NavLink class="nav-item-master" href="/Master/Resumen">
+            <i class="bi bi-bar-chart-fill"></i> Resumen
+        </NavLink>
+
+        <NavLink class="nav-item-master" href="/Master/Almacen">
+            <i class="bi bi-box-seam-fill"></i> Almacen
+        </NavLink>
+
+        <NavLink class="nav-item-master" href="/Master/Proveedores">
+            <i class="bi bi-truck-front-fill"></i> Proveedores
+        </NavLink>
+
+        <NavLink class="nav-item-master" href="/Master/Usuarios">
+            <i class="bi bi-people-fill"></i> Usuarios
+        </NavLink>
+
+        <div style="margin-top: auto; margin-bottom: 30px;">
+            <a href="/" class="nav-item-master">
+                <i class="bi bi-box-arrow-left"></i> Salir al Sistema
+            </a>
+        </div>
+    </nav>
+</div>
+
+@code {
+   
+    private string rutaLogoActual = "Imagenes/Logo1.png";
+
+   
+    private void CambiarLogo()
+    {
+        if (rutaLogoActual == "Imagenes/Logo1.png")
+        {
+            rutaLogoActual = "Imagenes/Logo2.png";
+        }
+        else
+        {
+            rutaLogoActual = "Imagenes/Logo1.png";
+        }
+    }
+}
