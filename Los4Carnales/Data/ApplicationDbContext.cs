@@ -35,10 +35,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.Entity<Cliente>()
-            .HasOne<ApplicationUser>()
-            .WithOne()
-            .HasForeignKey<Cliente>(c => c.UserId)
-            .IsRequired();
+            .HasOne(c => c.User) 
+            .WithMany() 
+            .HasForeignKey(c => c.UserId)
+            .IsRequired()
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Proveedores>().HasQueryFilter(p => !p.Eliminado);
         modelBuilder.Entity<Pedido>().HasQueryFilter(p => !p.Eliminado);
@@ -53,17 +54,28 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<Factura>().HasQueryFilter(f => !f.Eliminado);
 
         modelBuilder.Entity<EntradaDetalle>()
-        .HasOne(ed => ed.Producto)
-        .WithMany()
-        .HasForeignKey(ed => ed.ProductoId)
-        .IsRequired(false); // Esto evita que truene si el producto está "oculto" por el filtro
+            .HasOne(ed => ed.Producto)
+            .WithMany()
+            .HasForeignKey(ed => ed.ProductoId)
+            .IsRequired(false);
 
         modelBuilder.Entity<PedidoDetalle>()
             .HasOne(pd => pd.Producto)
             .WithMany()
             .HasForeignKey(pd => pd.ProductoId)
-            .IsRequired(false);
+            .IsRequired(false); // Esto evita que truene si el producto está "oculto" por el filtro
+
+        modelBuilder.Entity<Factura>()
+            .HasOne(f => f.Cliente)
+            .WithMany()
+            .HasForeignKey(f => f.ClienteId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<Factura>()
+            .HasOne(f => f.Pedido)
+            .WithMany()
+            .HasForeignKey(f => f.PedidoId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
-    
 
 }

@@ -190,20 +190,13 @@ namespace Los4Carnales.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("UserId1")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("ViviendaCliente")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("ClienteId");
 
-                    b.HasIndex("UserId")
-                        .IsUnique();
-
-                    b.HasIndex("UserId1");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Cliente");
                 });
@@ -766,16 +759,10 @@ namespace Los4Carnales.Migrations
 
             modelBuilder.Entity("Los4Carnales.Models.Cliente", b =>
                 {
-                    b.HasOne("Los4Carnales.Data.ApplicationUser", null)
-                        .WithOne()
-                        .HasForeignKey("Los4Carnales.Models.Cliente", "UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Los4Carnales.Data.ApplicationUser", "User")
                         .WithMany()
-                        .HasForeignKey("UserId1")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("User");
@@ -812,13 +799,13 @@ namespace Los4Carnales.Migrations
                     b.HasOne("Los4Carnales.Models.Cliente", "Cliente")
                         .WithMany()
                         .HasForeignKey("ClienteId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Los4Carnales.Models.Pedido", "Pedido")
                         .WithMany()
                         .HasForeignKey("PedidoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Cliente");
