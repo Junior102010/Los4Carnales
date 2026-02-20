@@ -12,21 +12,21 @@
 <PageTitle>Editar Producto</PageTitle>
 <div class="container">
     <div class="card card-glass rounded-4 p-2">
-        
+
         <EditForm Model="Producto" OnValidSubmit="Guardar" FormName="EditarProductoForm">
             <DataAnnotationsValidator />
-            
+
             <div class="card-body">
-                
-                @* --- FILA 1: DATOS BÁSICOS --- *@
+
+                @* --- FILA 1: DATOS BÁSICOS (Ajustado a 3 columnas para incluir la Etiqueta) --- *@
                 <div class="row mb-4">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Nombre</label>
                         <InputText class="form-control input-glass" @bind-Value="Producto.NombreProducto" />
                         <ValidationMessage For="(() => Producto.NombreProducto)" />
                     </div>
 
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Categoría</label>
                         <InputSelect class="form-select input-glass" @bind-Value="Producto.Categoria">
                             <option value="" selected disabled>Seleccione...</option>
@@ -41,11 +41,20 @@
                         </InputSelect>
                         <ValidationMessage For="(() => Producto.Categoria)" />
                     </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-bold mb-1">Etiqueta</label>
+                        @* Readonly para garantizar que NO se pueda editar *@
+                        <InputText class="form-control input-glass text-primary fw-bold"
+                                   @bind-Value="Producto.Etiqueta"
+                                   readonly />
+                        <ValidationMessage For="(() => Producto.Etiqueta)" />
+                    </div>
                 </div>
 
-            
+
                 <div class="row mb-3">
-                    
+
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Costo (Compra)</label>
                         <div class="input-group">
@@ -55,7 +64,6 @@
                         <ValidationMessage For="(() => Producto.Costo)" />
                     </div>
 
-                    @* Precio *@
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Precio (Venta)</label>
                         <div class="input-group">
@@ -65,7 +73,6 @@
                         <ValidationMessage For="(() => Producto.Precio)" />
                     </div>
 
-                   
                     <div class="col-md-4 d-flex flex-column justify-content-end pb-2">
                         <span class="small text-muted">Margen estimado:</span>
                         <h5 class="m-0 @(ObtenerColorGanancia())">
@@ -76,9 +83,8 @@
 
                 <hr class="border-secondary opacity-25" />
 
-                
                 <div class="row mb-3 align-items-end">
-                    
+
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Unidad de Medida</label>
                         <InputSelect class="form-select input-glass" @bind-Value="Producto.UnidadMedida">
@@ -92,7 +98,6 @@
                         </InputSelect>
                     </div>
 
-                   
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Existencia Actual</label>
                         <InputNumber class="form-control input-glass fw-bold" style="color: #3D5D35;" @bind-Value="Producto.Existencia" />
@@ -110,16 +115,16 @@
                 }
             </div>
 
-         
+
             <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center mt-2 pt-0 pb-3 px-4">
                 <a href="/Almacen" class="btn btn-outline-secondary px-4">
                     <span class="bi bi-arrow-left"></span> Volver
                 </a>
-                
+
                 <button type="button" class="btn btn-danger" @onclick="Eliminar">
                     <span class="bi bi-trash"> </span> Eliminar
                 </button>
-                
+
                 <button type="submit" class="btn btn-gradiente px-5">
                     <span class="bi bi-pencil-square"></span> Guardar Cambios
                 </button>
@@ -158,12 +163,10 @@
     {
         var ok = await productosService.Eliminar(ProductoId);
 
-        if(ok)
+        if (ok)
         {
             navigationManager.NavigateTo("/Almacen");
         }
-
-
     }
 
     public async Task Guardar()
@@ -194,11 +197,10 @@
         }
     }
 
-    // Pequeño helper para el color del margen
     private string ObtenerColorGanancia()
     {
-        if (Producto.Precio < Producto.Costo) return "text-danger"; // Pierdes dinero
-        if (Producto.Precio == Producto.Costo) return "text-warning"; // No ganas nada
-        return "text-success"; // Ganas dinero
+        if (Producto.Precio < Producto.Costo) return "text-danger";
+        if (Producto.Precio == Producto.Costo) return "text-warning";
+        return "text-success";
     }
 }

@@ -1,0 +1,256 @@
+﻿@page "/Master/Almacen"
+
+@using Los4Carnales.Models
+@using Los4Carnales.Services
+@using Los4Carnales.Components.Layout
+
+@layout MasterLayout
+
+@rendermode InteractiveServer
+@inject ProductosServices productosService
+@inject NavigationManager navigationManager
+@inject IJSRuntime JS
+
+@attribute [Authorize(Roles = "Master")]
+
+<div class="top-header-master">
+    Papelería de Almacén (Productos Eliminados)
+</div>
+
+<div class="content-body">
+    <div class="controls-bar">
+        <div class="d-flex gap-4">
+            <div>
+                <div class="filter-label">Filtrar por:</div>
+                <select class="input-custom" @bind="CriterioFiltro">
+                    <option value="Nombre">Nombre</option>
+                    <option value="Etiqueta">Etiqueta</option>
+                    <option value="Categoria">Categoría</option>
+                </select>
+            </div>
+
+            <div>
+                <div class="filter-label">Buscar</div>
+                <div class="d-flex gap-1">
+                    <input type="text" class="input-custom" placeholder="Escribe para buscar..."
+                           @bind="TextoBusqueda" @bind:event="oninput" style="width: 250px;">
+                    <button class="input-custom bg-white border"><i class="bi bi-search"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="badge-counter">
+            <i class="bi bi-trash3-fill"></i>
+            <div>
+                <div class="fs-4 fw-bold lh-1 text-dark">@ListaFiltrada.Count</div>
+                <small class="text-muted">Eliminados</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="big-card-container">
+        @* --- ENCABEZADOS AJUSTADOS --- *@
+        <div class="table-header">
+            <div style="width: 50px; text-align: center;">ID</div>
+            <div style="width: 25%;">Etiqueta / Nombre</div>
+            <div style="width: 20%; text-align: left; padding-left: 15px;">Categoría</div>
+            <div style="width: 15%; text-align: center;">Existencia</div>
+            <div style="width: 15%; text-align: center;">Estado</div>
+            <div style="width: 150px; text-align: center;">Opciones</div>
+        </div>
+
+        @if (ListaProductos.Count == 0)
+        {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted mt-5">
+                <i class="bi bi-inbox fs-1 mb-3"></i>
+                <h4>La papelera está vacía</h4>
+                <p>No hay productos eliminados recientemente.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in ListaFiltrada)
+            {
+                <div class="data-row">
+                    @* ID Centrado *@
+                    <div class="col-id" style="width: 50px; text-align: center;">@item.ProductoId</div>
+
+                    @* Nombre Ajustado *@
+                    <div class="col-name" style="width: 25%;">
+                        <div class="fw-bold text-dark">@item.NombreProducto</div>
+                        <small class="text-muted"><i class="bi bi-tag"></i> @item.Etiqueta</small>
+                    </div>
+
+                    @* Categoría movida a la izquierda *@
+                    <div style="width: 20%; text-align: left; padding-left: 15px;">
+                        <span class="badge bg-light text-secondary border">@item.Categoria</span>
+                    </div>
+
+                    @* Existencia Centrada *@
+                    <div style="width: 15%; text-align: center;">
+                        <span class="fw-bold text-dark">@item.Existencia</span> <small class="text-muted">@item.UnidadMedida</small>
+                    </div>
+
+                    @* Estado Centrado *@
+                    <div class="col-status" style="width: 15%;">
+                        X Eliminado
+                    </div>
+
+                    @* Opciones Centradas *@
+                    <div class="col-actions" style="width: 150px;">
+                        <button class="action-btn btn-view" title="Ver toda la información"
+                                @onclick="() => MostrarDetalles(item)">
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+
+                        <button class="action-btn btn-restore" title="Restaurar al sistema"
+                                @onclick="() => Restaurar(item.ProductoId)">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </button>
+
+                        <button class="action-btn btn-delete" title="Eliminar definitivamente"
+                                @onclick="() => EliminarDefinitivamente(item.ProductoId)">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@* --- MODAL DE DETALLES (Diseño puro Blazor) --- *@
+@if (ModalVisible && ProductoSeleccionado != null)
+{
+    <div class="custom-modal-backdrop" @onclick="CerrarModal">
+        <div class="custom-modal-content" @onclick:stopPropagation="true">
+
+            <div class="modal-header-custom">
+                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i> Detalles del Producto</h5>
+                <button class="action-btn text-muted" @onclick="CerrarModal"><i class="bi bi-x-lg"></i></button>
+            </div>
+
+            <div class="modal-body-custom mt-3">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">ID Base de Datos</small>
+                        <p class="fs-5 mb-0 fw-bold text-dark">#@ProductoSeleccionado.ProductoId</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted fw-bold">Estado</small>
+                        <p class="mb-0 text-danger fw-bold">Eliminado</p>
+                    </div>
+                </div>
+
+                <hr class="opacity-25" />
+
+                <div class="row mb-3">
+                    <div class="col-12 mb-2">
+                        <small class="text-muted fw-bold">Nombre del Producto</small>
+                        <p class="mb-0 text-dark">@ProductoSeleccionado.NombreProducto</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">Etiqueta</small>
+                        <p class="mb-0 text-dark">@ProductoSeleccionado.Etiqueta</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">Categoría</small>
+                        <p class="mb-0 text-dark">@ProductoSeleccionado.Categoria</p>
+                    </div>
+                </div>
+
+                <hr class="opacity-25" />
+
+                <div class="row mb-3">
+                    <div class="col-4">
+                        <small class="text-muted fw-bold">Costo</small>
+                        <p class="mb-0 text-danger fw-bold">@ProductoSeleccionado.Costo.ToString("C2")</p>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted fw-bold">Precio Empresa</small>
+                        <p class="mb-0" style="color: #3D5D35; font-weight: bold;">@ProductoSeleccionado.PrecioEmpresa.ToString("C2")</p>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted fw-bold">Precio Público</small>
+                        <p class="mb-0 text-success fw-bold">@ProductoSeleccionado.Precio.ToString("C2")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-custom mt-4 text-end">
+                <button class="btn btn-secondary px-4 rounded-pill" @onclick="CerrarModal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public List<Producto> ListaProductos { get; set; } = new List<Producto>();
+
+    public string TextoBusqueda { get; set; } = "";
+    public string CriterioFiltro { get; set; } = "Nombre";
+
+    // Variables para el Modal
+    public bool ModalVisible { get; set; } = false;
+    public Producto? ProductoSeleccionado { get; set; }
+
+    public List<Producto> ListaFiltrada
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(TextoBusqueda))
+                return ListaProductos;
+
+            switch (CriterioFiltro)
+            {
+                case "Etiqueta":
+                    return ListaProductos.Where(p => p.Etiqueta != null && p.Etiqueta.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+                case "Categoria":
+                    return ListaProductos.Where(p => p.Categoria != null && p.Categoria.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+                default:
+                    return ListaProductos.Where(p => p.NombreProducto != null && p.NombreProducto.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        // Se asume que en ProductosServices tienes el método ListarPapelera()
+        ListaProductos = await productosService.ListarPapelera();
+    }
+
+    // Funciones del Modal
+    private void MostrarDetalles(Producto producto)
+    {
+        ProductoSeleccionado = producto;
+        ModalVisible = true;
+    }
+
+    private void CerrarModal()
+    {
+        ModalVisible = false;
+        ProductoSeleccionado = null;
+    }
+
+    private async Task Restaurar(int id)
+    {
+        var exito = await productosService.Restaurar(id);
+        if (exito) await CargarDatos();
+    }
+
+    private async Task EliminarDefinitivamente(int id)
+    {
+        bool confirmar = await JS.InvokeAsync<bool>("confirm", "⚠️ ¿Estás seguro de eliminar este producto PERMANENTEMENTE? No se podrá recuperar.");
+
+        if (confirmar)
+        {
+            var exito = await productosService.EliminarPermanente(id);
+            if (exito) await CargarDatos();
+        }
+    }
+}
