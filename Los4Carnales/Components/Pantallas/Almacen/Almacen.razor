@@ -1,0 +1,155 @@
+﻿@page "/Almacen"
+@using Microsoft.AspNetCore.Authorization
+
+@inject ProductosServices productosService
+@inject NavigationManager navigationManager
+@inject PageTitleService PageTitleService
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Registro de Productos</PageTitle>
+
+<div class="container">
+
+    <div class="card card-glass rounded-4 p-2">
+
+        <div class="card-body">
+
+            @* --- FILTROS --- *@
+            <div class="row align-items-end mb-4">
+
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Filtrar por</label>
+                    <InputSelect class="form-select input-glass" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opción</option>
+                        <option value="Nombre">Nombre</option>
+                        <option value="Categoria">Categoría</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Búsqueda</label>
+                    <div class="input-group">
+                        <input class="form-control input-glass" @bind="ValorFiltro" placeholder="Buscar..." />
+                        <button type="button" class="btn btn-outline-success bi bi-search" @onclick="Buscar"></button>
+                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Restablecer"></button>
+                    </div>
+                </div>
+
+                <div class="col-md-1"></div>
+
+                <div class="col-md-4 text-end">
+                    <div class="d-flex justify-content-end gap-2">
+                        <a href="/Entrada/Index" class="btn btn-gradiente px-3">
+                            <span class="bi bi-box-arrow-down"></span> Ir a Entradas
+                        </a>
+                        <a href="/Producto/Create" class="btn btn-gradiente px-3">
+                            <span class="bi bi-plus-square"></span> Crear
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            @* --- TABLA --- *@
+            <div class="table-responsive">
+                <table class="table table-hover bg-transparent align-middle">
+                    <thead class="text-black" style="background-color: rgba(0,0,0,0.03); border-bottom: 2px solid rgba(0,0,0,0.1);">
+                        <tr>
+                            <th class="py-3 ps-3">ID</th>
+                            <th class="py-3">Nombre</th>
+                            <th class="py-3 text-center">Existencia</th>
+                            <th class="py-3 text-center">Categoría</th>
+
+                            @* Columnas de Precios *@
+                            <th class="py-3 text-end">Precio (Detalle)</th>
+                            <th class="py-3 text-end text-primary">Mayorista</th>
+
+                            <th class="py-3 text-center">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: transparent;">
+                        @foreach (var producto in ListaProductos)
+                        {
+                            <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                <td class="ps-3 fw-bold text-muted">@producto.ProductoId</td>
+                                <td>@producto.NombreProducto</td>
+
+                                @* Existencia con color si está bajo *@
+                                <td class="text-center fw-bold @(producto.Existencia < 10 ? "text-danger" : "text-dark")">
+                                    @producto.Existencia @producto.UnidadMedida
+                                </td>
+
+                                <td class="text-center">
+                                    <span class="badge bg-light text-secondary border">@producto.Categoria</span>
+                                </td>
+
+                                @* PRECIO NORMAL *@
+                                <td class="text-end fw-bold" style="color: #3D5D35;">
+                                    @producto.Precio.ToString("C2")
+                                </td>
+
+                                @* PRECIO EMPRESA (NUEVO) *@
+                                <td class="text-end fw-bold text-primary">
+                                    @producto.PrecioEmpresa.ToString("C2")
+                                </td>
+
+                                <td class="text-center">
+                                    <a href="/Producto/Edit/@producto.ProductoId" class="btn btn-sm btn-outline-success border-0 bi bi-pencil-square fs-5"></a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* --- FOOTER --- *@
+        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between text-muted mt-2 pt-0 pb-3 px-4">
+            <small class="fw-bold">Cantidad: @ListaProductos.Count()</small>
+            <small class="fw-bold">
+                Valor Inventario: <span style="color: #3D5D35;">@ListaProductos.Sum(p => p.Costo * p.Existencia).ToString("C2")</span>
+            </small>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Producto> ListaProductos { get; set; } = new List<Producto>();
+
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Almacen");
+        ListaProductos = await productosService.Listar(p => p.ProductoId > 0);
+    }
+
+    private async Task Buscar()
+    {
+        if (!string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            if (Filtro == "Nombre")
+            {
+                ListaProductos = await productosService.Listar(
+                    p => p.NombreProducto != null && p.NombreProducto.ToLower().Contains(ValorFiltro.ToLower()));
+            }
+            else if (Filtro == "Categoria")
+            {
+                ListaProductos = await productosService.Listar(
+                    p => p.Categoria != null && p.Categoria.ToLower().Contains(ValorFiltro.ToLower()));
+            }
+        }
+        else
+        {
+            ListaProductos = await productosService.Listar(p => p.ProductoId > 0);
+        }
+    }
+
+    private async Task Restablecer()
+    {
+        ListaProductos = await productosService.Listar(e => e.ProductoId > 0);
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+}

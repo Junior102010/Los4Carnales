@@ -4,6 +4,15 @@ namespace Los4Carnales.Models;
 
 public class UnidadMedida
 {
+    //CONSTRUCTOR TEMPORAL EN LO QUE "HACEMOS" LA PANTALLA UNIDAD DE MEDIDA.
+    public UnidadMedida(int UnidadId, string Descripcion, string Abreviatura) 
+    {
+        this.UnidadId = UnidadId;
+        this.Descripcion = Descripcion;
+        this.Abreviatura = Abreviatura;
+        Eliminado = false;
+    }
+
     [Key]
     public int UnidadId { get; set; }
 
