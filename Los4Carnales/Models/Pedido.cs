@@ -23,6 +23,7 @@ public class Pedido
     public string Estado { get; set; } = "Pendiente";
     [Required]
     public bool Delivery { get; set; }
+    public bool Eliminado { get; set; } = false;
     [Required]
     public string? ReferenciaSitio { get; set; }
 

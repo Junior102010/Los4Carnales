@@ -28,6 +28,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<UnidadMedida> UnidadMedida { get; set; }
     public DbSet<Sector> Sector { get; set; }
     public DbSet<Factura> Factura { get; set; }
+    public DbSet<Proveedores> Proveedores { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -41,7 +42,17 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Ignore<ApplicationUser>();
 
         modelBuilder.Entity<Proveedores>().HasQueryFilter(p => !p.Eliminado);
+        modelBuilder.Entity<Pedido>().HasQueryFilter(p => !p.Eliminado);
+        modelBuilder.Entity<Producto>().HasQueryFilter(p => !p.Eliminado);
+        modelBuilder.Entity<Entrada>().HasQueryFilter(e => !e.Eliminado);
+        modelBuilder.Entity<Cliente>().HasQueryFilter(c => !c.Eliminado);
+        modelBuilder.Entity<Categorias>().HasQueryFilter(c => !c.Eliminado);
+        modelBuilder.Entity<Transferencia>().HasQueryFilter(t => !t.Eliminado);
+        modelBuilder.Entity<Abono>().HasQueryFilter(a => !a.Eliminado);
+        modelBuilder.Entity<UnidadMedida>().HasQueryFilter(u => !u.Eliminado);
+        modelBuilder.Entity<Sector>().HasQueryFilter(s => !s.Eliminado);
+        modelBuilder.Entity<Factura>().HasQueryFilter(f => !f.Eliminado);
     }
-    public DbSet<Proveedores> Proveedores { get; set; }
+    
 
 }

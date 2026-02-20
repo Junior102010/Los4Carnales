@@ -11,6 +11,7 @@ public class Factura
 
     [DataType(DataType.DateTime)]
     public DateTime FechaEmision { get; set; } = DateTime.Now;
+    public bool Eliminado { get; set; } = false;
 
     public int PedidoId { get; set; }
 

@@ -32,7 +32,5 @@ public class Producto
 
     [Required(ErrorMessage = "Campo obligatorio")]
     public int Existencia { get; set; }
-
-
-
+    public bool Eliminado { get; set; } = false;
 }

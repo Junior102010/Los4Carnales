@@ -28,4 +28,5 @@ public class PedidoDetalle
     [Required]
     [Range(0, double.MaxValue, ErrorMessage = "El importe no puede ser negativo")]
     public double Importe { get; set; }
+    public bool Eliminado { get; set; } = false;
 }

@@ -16,6 +16,8 @@ public class Entrada
     [Required(ErrorMessage = "El concepto de la entrada es obligatorio.")]
     public string Concepto { get; set; } = string.Empty;
 
+    public bool Eliminado { get; set; } = false;
+
     [Required(ErrorMessage = "Debe seleccionar un proveedor.")]
     public int ProveedorId { get; set; }
 

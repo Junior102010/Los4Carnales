@@ -20,6 +20,8 @@ public class EntradaDetalle
     [Range(1, int.MaxValue, ErrorMessage = "La Cantidad debe ser mayor que cero.")]
     public int Cantidad { get; set; }
 
+    public bool Eliminado { get; set; } = false;
+
     [ForeignKey("ProductoId")]
     public Producto? Producto { get; set; }
 }

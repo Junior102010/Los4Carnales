@@ -37,7 +37,7 @@ public class Cliente
 
     [Required(ErrorMessage = "Campo obligatorio.")]
     public string DescripcionCliente { get; set; }
-
+    public bool Eliminado { get; set; } = false;
 
     public ICollection<Transferencia> transferencia { get; set; } = new List<Transferencia>();
 }

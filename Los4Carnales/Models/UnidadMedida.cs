@@ -13,4 +13,5 @@ public class UnidadMedida
     [Required(ErrorMessage = "La abreviatura es obligatoria")]
     [StringLength(10, ErrorMessage = "Máximo 10 caracteres")]
     public string Abreviatura { get; set; } = string.Empty;
+    public bool Eliminado { get; set; } = false;
 }

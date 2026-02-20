@@ -13,5 +13,6 @@ public class Sector
     [Required(ErrorMessage = "Campo obligatorio")]
     public string Municipio { get; set; } = "El Factor"; 
 
-    public double PrecioEnvio { get; set; } = 0; 
+    public double PrecioEnvio { get; set; } = 0;
+    public bool Eliminado { get; set; } = false;
 }

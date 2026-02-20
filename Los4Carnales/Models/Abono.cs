@@ -22,4 +22,6 @@ public class Abono
     public string Observacion { get; set; } = string.Empty;
 
     public DateTime Fecha { get; set; } = DateTime.Now;
+
+    public bool Eliminado { get; set; } = false;
 }
