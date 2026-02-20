@@ -4,6 +4,7 @@ using Los4Carnales.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Los4Carnales.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260219030530_Segunda")]
+    partial class Segunda
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -32,9 +35,6 @@ namespace Los4Carnales.Migrations
 
                     b.Property<int>("ClienteId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
@@ -60,9 +60,6 @@ namespace Los4Carnales.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoriaId"));
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
@@ -92,9 +89,6 @@ namespace Los4Carnales.Migrations
                     b.Property<string>("DescripcionCliente")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
 
                     b.Property<string>("NombreCliente")
                         .IsRequired()
@@ -133,9 +127,6 @@ namespace Los4Carnales.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
-
                     b.Property<DateTime>("FechaEntrada")
                         .HasColumnType("datetime2");
 
@@ -159,9 +150,6 @@ namespace Los4Carnales.Migrations
 
                     b.Property<int>("Cantidad")
                         .HasColumnType("int");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
 
                     b.Property<int>("EntradaId")
                         .HasColumnType("int");
@@ -191,9 +179,6 @@ namespace Los4Carnales.Migrations
 
                     b.Property<string>("CodigoFactura")
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime>("FechaEmision")
                         .HasColumnType("datetime2");
@@ -225,9 +210,6 @@ namespace Los4Carnales.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("Delivery")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("Eliminado")
                         .HasColumnType("bit");
 
                     b.Property<string>("Estado")
@@ -266,9 +248,6 @@ namespace Los4Carnales.Migrations
                     b.Property<double>("Cantidad")
                         .HasColumnType("float");
 
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
-
                     b.Property<double>("Importe")
                         .HasColumnType("float");
 
@@ -304,9 +283,6 @@ namespace Los4Carnales.Migrations
 
                     b.Property<double>("Costo")
                         .HasColumnType("float");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
 
                     b.Property<string>("Etiqueta")
                         .IsRequired()
@@ -377,9 +353,6 @@ namespace Los4Carnales.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SectorId"));
 
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
-
                     b.Property<string>("Municipio")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -410,9 +383,6 @@ namespace Los4Carnales.Migrations
                     b.Property<string>("Destino")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime>("Fecha")
                         .HasColumnType("datetime2");
@@ -478,9 +448,6 @@ namespace Los4Carnales.Migrations
                     b.Property<string>("Descripcion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("Eliminado")
-                        .HasColumnType("bit");
 
                     b.HasKey("UnidadId");
 

@@ -10,4 +10,6 @@ public class Categorias
     [Required]
     public string Nombre { get; set; }
 
+    public bool Eliminado { get; set; } = false;
+
 }
