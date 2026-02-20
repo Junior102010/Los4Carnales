@@ -116,6 +116,9 @@
                     <span class="bi bi-arrow-left"></span> Volver
                 </a>
                 
+                <button type="button" class="btn btn-danger" @onclick="Eliminar">
+                    <span class="bi bi-trash"> </span> Eliminar
+                </button>
                 
                 <button type="submit" class="btn btn-gradiente px-5">
                     <span class="bi bi-pencil-square"></span> Guardar Cambios
@@ -131,7 +134,7 @@
 
     [SupplyParameterFromForm]
     public Producto Producto { get; set; } = new Producto();
-    
+
     public string Mensaje { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
@@ -149,6 +152,18 @@
                 Mensaje = "El producto no fue encontrado.";
             }
         }
+    }
+
+    public async Task Eliminar()
+    {
+        var ok = await productosService.Eliminar(ProductoId);
+
+        if(ok)
+        {
+            navigationManager.NavigateTo("/Almacen");
+        }
+
+
     }
 
     public async Task Guardar()
