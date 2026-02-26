@@ -1,3 +1,5 @@
+using CurrieTechnologies.Razor.SweetAlert2;
+using Los4Carnales;
 using Los4Carnales.Components;
 using Los4Carnales.Components.Account;
 using Los4Carnales.Data;
@@ -5,7 +7,6 @@ using Los4Carnales.Services;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Los4Carnales;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,6 +57,7 @@ builder.Services.AddScoped<TranferenciaServices>();
 builder.Services.AddScoped<CarritoService>();
 builder.Services.AddScoped<AbonosService>();
 builder.Services.AddScoped<ConfiguracionService>();
+builder.Services.AddSweetAlert2();
 
 var app = builder.Build();
 

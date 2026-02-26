@@ -1,17 +1,25 @@
 ﻿@page "/Proveedores/Create/{ProveedorId:int}"
+
+@using Microsoft.AspNetCore.Identity
+@using Los4Carnales.Data
+
+@inject SweetAlertService Swal
 @inject ProveedoresServices proveedoresServices
 @inject NavigationManager navigationManager
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = "Administrador")]
 
 <PageTitle>Proveedores</PageTitle>
+
 <div class="container mt-4">
     <div class="card card-glass rounded-4 p-4 shadow-sm">
         <EditForm Model="proveedor" OnValidSubmit="Guardar">
             <DataAnnotationsValidator></DataAnnotationsValidator>
 
             <div class="card-body bg-white rounded-4 p-4">
-
                 <div class="row g-4">
 
                     <div class="col-md-6">
@@ -25,7 +33,6 @@
                         <select class="form-select input-glass">
                             <option>Diario</option>
                         </select>
-
                     </div>
 
                     <div class="col-md-6">
@@ -54,20 +61,20 @@
 
                     <div class="col-12 d-flex justify-content-between mt-4">
                         <a href="/Proveedor/Index" class="btn btn-outline-secondary rounded-3 px-4">Volver</a>
-                        @if (crear == "Editar")
-                        {
-                            <button type="button" class="btn btn-outline-danger me-2" @onclick="Eliminar">
-                                <i class="bi bi-trash"></i> Eliminar
-                            </button>
-                        }
-                        <button type="submit" class="btn btn-success rounded-3 px-5" style="background-color: #4c7c4c; border: none;">Guardar</button>
+
+                        <div class="d-flex">
+                            @if (crear == "Editar")
+                            {
+                                <button type="button" class="btn btn-outline-danger me-2" @onclick="Eliminar">
+                                    <i class="bi bi-trash"></i> Eliminar
+                                </button>
+                            }
+                            <button type="submit" class="btn btn-success rounded-3 px-5" style="background-color: #4c7c4c; border: none;">Guardar</button>
+                        </div>
                     </div>
 
                 </div>
             </div>
-
-
-
         </EditForm>
     </div>
 </div>
@@ -100,27 +107,104 @@
 
             if (ok)
             {
+                await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "¡Guardado!",
+                    Text = "El proveedor se guardó exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+
                 navigationManager.NavigateTo("/Proveedor/Index");
             }
         }
-        catch(Exception ex)
+        catch (Exception ex)
         {
+            await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Error",
+                Text = "Ocurrió un problema al guardar.",
+                Icon = SweetAlertIcon.Error
+            });
             Console.WriteLine(ex.Message);
         }
-
-
     }
 
     public async Task Eliminar()
     {
-        var ok = await proveedoresServices.Eliminar(proveedor.ProveedorId);
-
-        if (ok)
+        // 1. Alerta de Advertencia Inicial
+        // Dejamos que el CSS de la clase .swal2-confirm y .swal2-cancel haga la magia visual
+        var confirmacion = await Swal.FireAsync(new SweetAlertOptions
         {
-            navigationManager.NavigateTo("/Proveedor/Index");
+            Title = "¿Estás seguro?",
+            Text = $"¿Deseas eliminar al proveedor {proveedor.Nombre}?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "<i class=\"bi bi-trash-fill me-1\"></i> Eliminar",
+            CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(confirmacion.Value))
+        {
+            // 2. Pedimos la contraseña
+            var passwordResult = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmar identidad",
+                Text = "Ingresa tu contraseña de administrador para autorizar:",
+                Input = SweetAlertInputType.Password,
+                InputPlaceholder = "Tu contraseña",
+                ShowCancelButton = true,
+                ConfirmButtonText = "<i class=\"bi bi-shield-lock-fill me-1\"></i> Verificar",
+                CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+            });
+
+            if (!string.IsNullOrEmpty(passwordResult.Value))
+            {
+                string passwordIngresado = passwordResult.Value;
+
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var user = await UserManager.GetUserAsync(authState.User);
+
+                bool passwordCorrecto = false;
+                if (user != null)
+                {
+                    // Validación real con Identity
+                    passwordCorrecto = await UserManager.CheckPasswordAsync(user, passwordIngresado);
+                }
+
+                if (passwordCorrecto)
+                {
+                    var ok = await proveedoresServices.Eliminar(proveedor.ProveedorId);
+
+                    if (ok)
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "¡Eliminado!",
+                            Text = "El proveedor se borró correctamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+                        navigationManager.NavigateTo("/Proveedor/Index");
+                    }
+                    else
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "No se pudo eliminar de la base de datos.",
+                            Icon = SweetAlertIcon.Error
+                        });
+                    }
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Acceso Denegado",
+                        Text = "La contraseña es incorrecta. Operación cancelada.",
+                        Icon = SweetAlertIcon.Error
+                    });
+                }
+            }
         }
-
     }
-
 }
-
