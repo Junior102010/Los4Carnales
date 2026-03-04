@@ -38,7 +38,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .HasOne(c => c.User) 
             .WithMany() 
             .HasForeignKey(c => c.UserId)
-            .IsRequired()
+            .IsRequired(false) // Permite valores nulos en la DB
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Proveedores>().HasQueryFilter(p => !p.Eliminado);

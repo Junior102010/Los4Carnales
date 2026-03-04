@@ -1,0 +1,202 @@
+﻿@page "/Facturacion/Index"
+@using Microsoft.AspNetCore.Authorization
+
+@inject PedidosServices pedidosService
+@inject NavigationManager navigationManager
+@inject PageTitleService PageTitleService
+@rendermode InteractiveServer
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Gestión de Facturaci&oacute;n</PageTitle>
+
+
+
+<div class="container">
+    <div class="card card-glass rounded-4 p-2">
+        <div class="card-body">
+
+
+            <div class="row align-items-end mb-4">
+
+
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Desde</label>
+                    <InputDate class="form-control input-glass" @bind-Value="FechaInicio" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Hasta</label>
+                    <InputDate class="form-control input-glass" @bind-Value="FechaFin" />
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Buscar (Cliente)</label>
+                    <div class="input-group">
+                        <input class="form-control input-glass" @bind="ValorFiltro" placeholder="Escribe nombre..." />
+                        <button type="button" class="btn btn-outline-success bi bi-search" @onclick="Buscar"></button>
+                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Restablecer" title="Limpiar"></button>
+                    </div>
+                </div>
+
+
+                <div class="col-md-2 text-end">
+                    <a href="/Facturacion/Create" class="btn btn-gradiente w-100">
+                        <span class="bi bi-plus-square"></span> Nuevo
+                    </a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover bg-transparent align-middle">
+                    <thead class="text-black" style="background-color: rgba(0,0,0,0.03); border-bottom: 2px solid rgba(0,0,0,0.1);">
+                        <tr>
+                            <th class="ps-3">#ID</th>
+                            <th>Fecha</th>
+                            <th>Cliente</th>
+                            <th class="text-center">Entrega</th>
+                            <th class="text-end">Monto</th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: transparent;">
+                        @foreach (var pedido in ListaPedidos)
+                        {
+                            <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                <td class="ps-3 fw-bold text-muted">@pedido.PedidoId</td>
+
+
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold">@pedido.FechaPedido.ToShortDateString()</span>
+                                        <small class="text-muted" style="font-size: 0.75rem;">@pedido.FechaPedido.ToShortTimeString()</small>
+                                    </div>
+                                </td>
+
+
+                                <td>
+                                    @if (pedido.Cliente != null)
+                                    {
+                                        <span>@pedido.Cliente.NombreCliente @pedido.Cliente.ApellidoCliente</span>
+                                        <div class="small text-muted fst-italic">@pedido.Cliente.TelefonoCliente</div>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger">Desconocido</span>
+                                    }
+                                </td>
+
+
+                                <td class="text-center">
+                                    @if (pedido.Delivery)
+                                    {
+                                        <span class="badge bg-info text-dark border border-info bg-opacity-25">
+                                            <i class="bi bi-bicycle"></i> Delivery
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary text-dark border border-secondary bg-opacity-25">
+                                            <i class="bi bi-shop"></i> Local
+                                        </span>
+                                    }
+                                </td>
+
+                                <td class="text-end fw-bold" style="color: #3D5D35;">@pedido.MontoTotal.ToString("C2")</td>
+
+
+                                <td class="text-center">
+                                    <span class="badge rounded-pill @ObtenerColorEstado(pedido.Estado)">
+                                        @pedido.Estado
+                                    </span>
+                                </td>
+
+                                <td class="text-center">
+                                    <a href="/Facturacion/Edit/@pedido.PedidoId" class="btn btn-sm btn-outline-success border-0 bi bi-eye fs-5" title="Ver Detalle"></a>
+
+                                    <a href="/Factura/Details/@pedido.PedidoId" class="btn btn-outline-secondary" title="Ver Factura">
+                                        <i class="bi bi-receipt"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                        @if (!ListaPedidos.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                                    No hay pedidos que mostrar.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between text-muted mt-2 pt-0 pb-3 px-4">
+            <small class="fw-bold">Cantidad: @ListaPedidos.Count()</small>
+            <small class="fw-bold fs-6">Venta Total: <span style="color: #3D5D35;">@ListaPedidos.Sum(p => p.MontoTotal).ToString("C2")</span></small>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Pedido> ListaPedidos { get; set; } = new List<Pedido>();
+
+    public string ValorFiltro { get; set; } = string.Empty;
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Pedidos");
+        FechaInicio = DateTime.Now.AddDays(-30);
+        FechaFin = DateTime.Now;
+        await Buscar();
+    }
+
+    private async Task Buscar()
+    {
+
+        var lista = await pedidosService.Listar(p => p.PedidoId > 0);
+
+
+        if (FechaInicio.HasValue)
+            lista = lista.Where(p => p.FechaPedido.Date >= FechaInicio.Value.Date).ToList();
+        if (FechaFin.HasValue)
+            lista = lista.Where(p => p.FechaPedido.Date <= FechaFin.Value.Date).ToList();
+
+
+        if (!string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            lista = lista.Where(p => (p.Cliente.NombreCliente.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase) || p.Cliente.ApellidoCliente.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase))
+            ).ToList();
+        }
+
+        ListaPedidos = lista;
+    }
+
+    private async Task Restablecer()
+    {
+        ValorFiltro = string.Empty;
+        FechaInicio = DateTime.Now.AddDays(-30);
+        FechaFin = DateTime.Now;
+        await Buscar();
+    }
+
+    // Truquito visual para los colores de los estados
+    private string ObtenerColorEstado(string estado)
+    {
+        return estado switch
+        {
+            "Pendiente" => "bg-warning text-dark",    // Amarillo
+            "En Proceso" => "bg-primary",             // Azul
+            "En Camino" => "bg-info text-dark",       // Cian
+            "Entregado" => "bg-success",              // Verde
+            "Cancelado" => "bg-danger",               // Rojo
+            _ => "bg-secondary"                       // Gris
+        };
+    }
+}
