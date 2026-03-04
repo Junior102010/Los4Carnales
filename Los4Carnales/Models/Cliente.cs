@@ -1,4 +1,5 @@
 ﻿using Los4Carnales.Data;
+using Microsoft.AspNetCore.SignalR;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -6,14 +7,15 @@ namespace Los4Carnales.Models;
 
 public class Cliente
 {
+
     [Key]
     public int ClienteId { get; set; }
 
-    [Required(ErrorMessage = "Campo obligatorio.")]
-    public string UserId { get; set; }
+    
+    public string? UserId { get; set; }
 
     [ForeignKey(nameof(UserId))]
-    public ApplicationUser User { get; set; } = null!;
+    public ApplicationUser? User { get; set; } = null!;
 
     [Required(ErrorMessage = "Campo obligatorio.")]
     public string NombreCliente { get; set; }

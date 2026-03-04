@@ -1,0 +1,171 @@
+﻿@page "/Facturacion/Edit/{PedidoId:int}"
+@using Microsoft.AspNetCore.Authorization
+@rendermode InteractiveServer
+
+@inject ProductosServices productosServices
+@inject PedidosServices pedidosService
+@inject NavigationManager navigationManager
+@inject PageTitleService PageTitleService
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Gestionar Pedido</PageTitle>
+
+<div class="container">
+    <div class="card card-glass rounded-4 p-2">
+
+        <EditForm Model="Pedido" OnValidSubmit="Guardar" FormName="EditarPedidoForm">
+            <DataAnnotationsValidator />
+
+            <div class="card-body">
+
+
+                <div class="row mb-4">
+                    <div class="col-md-8">
+                        <h5 class="fw-bold text-muted mb-1">
+                            <i class="bi bi-person-circle"></i> @Pedido.Cliente?.NombreCliente @Pedido.Cliente?.ApellidoCliente
+                        </h5>
+                        <p class="mb-1 text-muted small"><i class="bi bi-telephone"></i> @Pedido.Cliente?.TelefonoCliente</p>
+                        <p class="mb-0 text-muted small fst-italic">
+                            <i class="bi bi-geo-alt"></i> @(Pedido.ReferenciaSitio ?? "Sin dirección")
+                            @if (Pedido.Delivery)
+                            {
+                                <span class="badge bg-info text-dark ms-2">Delivery</span>
+                            }
+                        </p>
+                    </div>
+
+
+                    <div class="col-md-4 bg-light bg-opacity-50 rounded-3 p-3 border">
+                        <label class="form-label fw-bold mb-1">Estado del Pedido</label>
+                        <InputSelect class="form-select fw-bold text-center"
+                                     @bind-Value="Pedido.Estado"
+                                     style="@ObtenerEstiloEstado(Pedido.Estado)">
+                            <option value="Pendiente">Pendiente 🕒</option>
+                            <option value="En Proceso">En Proceso 🍳</option>
+                            <option value="En Camino">En Camino 🛵</option>
+                            <option value="Entregado">Entregado ✅</option>
+                            <option value="Cancelado">Cancelado ❌</option>
+                        </InputSelect>
+                    </div>
+                </div>
+
+                <hr class="border-secondary opacity-25" />
+
+                <h6 class="fw-bold text-muted mb-3">Detalle de Consumo</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover bg-transparent align-middle">
+                        <thead class="text-black" style="background-color: rgba(0,0,0,0.03);">
+                            <tr>
+                                <th class="ps-3">Producto</th>
+                                <th class="text-center">Precio</th>
+                                <th class="text-center">Cant.</th>
+                                <th class="text-end pe-3">Importe</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Pedido.Detalles)
+                            {
+                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                    <td class="ps-3">
+                                        @(item.Producto?.NombreProducto ?? "Producto Eliminado")
+                                    </td>
+                                    <td class="text-center">@item.PrecioUnitario.ToString("C2")</td>
+                                    <td class="text-center fw-bold">@item.Cantidad</td>
+                                    <td class="text-end fw-bold pe-3" style="color: #3D5D35;">@item.Importe.ToString("C2")</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-light bg-opacity-50">
+                                <td colspan="3" class="text-end fw-bold pt-3">TOTAL GENERAL:</td>
+                                <td class="text-end fw-bold pt-3 pe-3 fs-5 text-success">@Pedido.MontoTotal.ToString("C2")</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Mensaje))
+                {
+                    <div class="alert alert-danger mt-3 text-center">@Mensaje</div>
+                }
+            </div>
+
+
+            <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center mt-2 pt-0 pb-3 px-4">
+                <a href="/Facturacion/Index" class="btn btn-outline-secondary px-4">Volver</a>
+                <button type="button" class="btn btn-danger px-5 shadow" @onclick="Eliminar">
+                    Eliminar
+                </button>
+                <button type="submit" class="btn btn-gradiente px-5 shadow">
+                    Guardar Cambios
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int PedidoId { get; set; }
+
+    [SupplyParameterFromForm]
+    public Pedido Pedido { get; set; } = new Pedido();
+
+    public string Mensaje { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Editar Pedido");
+        if (PedidoId > 0 && Pedido.PedidoId == 0) // Pequeña corrección para asegurar carga
+        {
+            var encontrado = await pedidosService.Buscar(PedidoId);
+            if (encontrado != null)
+            {
+                Pedido = encontrado;
+            }
+            else
+            {
+                Mensaje = "Pedido no encontrado.";
+            }
+        }
+    }
+
+    public async Task Guardar()
+    {
+        // ELIMINADO: Todo el bloque if(Pedido.Estado == "Entregado") {...}
+        // La lógica de inventario ahora la hace pedidosService.Guardar automáticamente.
+
+        var guardado = await pedidosService.Guardar(Pedido);
+
+        if (guardado)
+        {
+            navigationManager.NavigateTo("/Facturacion/Index");
+        }
+        else
+        {
+            Mensaje = "No se pudieron guardar los cambios.";
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var ok = await pedidosService.Eliminar(PedidoId);
+        if (ok)
+            navigationManager.NavigateTo("/Facturacion/Index");
+    }
+
+    private string ObtenerEstiloEstado(string estado)
+    {
+        // ... (Tu código de estilos sigue igual)
+        return estado switch
+        {
+            "Pendiente" => "border-color: #ffc107; color: #856404; background-color: #fff3cd;",
+            "En Proceso" => "border-color: #0d6efd; color: #084298; background-color: #cfe2ff;",
+            "En Camino" => "border-color: #0dcaf0; color: #055160; background-color: #cff4fc;",
+            "Entregado" => "border-color: #198754; color: #0f5132; background-color: #d1e7dd;",
+            "Cancelado" => "border-color: #dc3545; color: #842029; background-color: #f8d7da;",
+            _ => ""
+        };
+    }
+}
