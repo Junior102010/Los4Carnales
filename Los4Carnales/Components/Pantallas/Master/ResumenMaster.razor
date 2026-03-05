@@ -1,0 +1,266 @@
+﻿@page "/Master/Resumen"
+
+@using Los4Carnales.Models
+@using Los4Carnales.Services
+@using Los4Carnales.Components.Layout
+@using Microsoft.AspNetCore.Authorization
+
+@layout MasterLayout
+
+@rendermode InteractiveServer
+
+@inject PedidosServices pedidosService
+@inject ProductosServices productosService
+@inject ProveedoresServices proveedoresService
+@inject PageTitleService PageTitleService
+
+@attribute [Authorize(Roles = "Master")]
+
+<PageTitle>@PageTitleService.CurrentTitle</PageTitle>
+
+<div class="top-header-master text-center">
+    @PageTitleService.CurrentTitle
+</div>
+
+<div class="content-body">
+
+    <div class="d-sm-flex align-items-center justify-content-between mb-4 mt-2">
+        <h1 class="h4 mb-0 text-dark fw-bold">Visión General de Datos Eliminados</h1>
+        <button class="btn btn-gradiente rounded-pill px-4 shadow-sm" @onclick="CargarDatos">
+            <i class="bi bi-arrow-clockwise"></i> Actualizar
+        </button>
+    </div>
+
+    @* --- TARJETAS SUPERIORES (KPIs) --- *@
+    <div class="row">
+        @* Total en Papelera *@
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-glass border-left-danger h-100 py-2 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs text-danger fw-bold text-uppercase mb-1">
+                                En Papelera (Actual)
+                            </div>
+                            <div class="h3 mb-0 fw-bold" style="color: #3e2723;">@TotalEnPapelera</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-trash3-fill text-danger opacity-50" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Total Restablecidos (Histórico) *@
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-glass border-left-success h-100 py-2 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs text-success fw-bold text-uppercase mb-1">
+                                Datos Restablecidos
+                            </div>
+                            <div class="h3 mb-0 fw-bold" style="color: #3e2723;">@TotalRestaurados</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-arrow-counterclockwise text-success opacity-50" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Módulo más afectado (Eliminaciones) *@
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-glass border-left-warning h-100 py-2 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs text-warning fw-bold text-uppercase mb-1">
+                                Módulo Más Crítico
+                            </div>
+                            <div class="h5 mb-0 fw-bold" style="color: #3e2723;">@ModuloMasCritico</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle-fill text-warning opacity-50" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Módulo con más restauraciones *@
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-glass border-left-primary h-100 py-2 shadow-sm">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs text-primary fw-bold text-uppercase mb-1">
+                                Foco de Restauración
+                            </div>
+                            <div class="h5 mb-0 fw-bold" style="color: #3e2723;">@ModuloMasRestaurado</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-shield-check text-primary opacity-50" style="font-size: 2.5rem;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- PANELES DE DETALLE --- *@
+    <div class="row">
+
+        @* Desglose de Eliminados Actuales *@
+        <div class="col-lg-6 mb-4">
+            <div class="card card-glass shadow-sm h-100 custom-card-border">
+                <div class="card-header bg-transparent border-bottom py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 fw-bold text-danger"><i class="bi bi-pie-chart-fill me-2"></i> Desglose en Papelera</h6>
+                </div>
+                <div class="card-body">
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small fw-bold text-dark mb-1">
+                            <span><i class="bi bi-box-seam me-1"></i> Almacén (Productos)</span>
+                            <span>@EliminadosProductos</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: @(CalcularPorcentaje(EliminadosProductos))%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small fw-bold text-dark mb-1">
+                            <span><i class="bi bi-receipt me-1"></i> Facturación (Pedidos)</span>
+                            <span>@EliminadosPedidos</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: @(CalcularPorcentaje(EliminadosPedidos))%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between small fw-bold text-dark mb-1">
+                            <span><i class="bi bi-truck-front me-1"></i> Proveedores</span>
+                            <span>@EliminadosProveedores</span>
+                        </div>
+                        <div class="progress" style="height: 8px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: @(CalcularPorcentaje(EliminadosProveedores))%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        @* Actividad de Restauración *@
+        <div class="col-lg-6 mb-4">
+            <div class="card card-glass shadow-sm h-100 custom-card-border">
+                <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="m-0 fw-bold" style="color: #3D5D35;"><i class="bi bi-activity me-2"></i> Actividad de Restauración</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small text-muted mb-4">Resumen de los datos que han sido recuperados por los administradores. Un número alto de restauraciones indica posibles errores humanos en la eliminación.</p>
+
+                    <ul class="list-group list-group-flush bg-transparent">
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="color: #3e2723;">Almacén</h6>
+                                <small class="text-muted">Productos recuperados</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill px-3 py-2">@RestauradosProductos</span>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="color: #3e2723;">Facturación</h6>
+                                <small class="text-muted">Facturas recuperadas</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill px-3 py-2">@RestauradosPedidos</span>
+                        </li>
+                        <li class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="color: #3e2723;">Proveedores</h6>
+                                <small class="text-muted">Proveedores recuperados</small>
+                            </div>
+                            <span class="badge bg-success rounded-pill px-3 py-2">@RestauradosProveedores</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    // Variables para Eliminados (Reales desde la BD)
+    public int EliminadosProductos { get; set; }
+    public int EliminadosPedidos { get; set; }
+    public int EliminadosProveedores { get; set; }
+    public int TotalEnPapelera => EliminadosProductos + EliminadosPedidos + EliminadosProveedores;
+
+    
+    public int RestauradosProductos { get; set; } = 12; 
+    public int RestauradosPedidos { get; set; } = 5;   
+    public int RestauradosProveedores { get; set; } = 2; 
+    public int TotalRestaurados => RestauradosProductos + RestauradosPedidos + RestauradosProveedores;
+
+    public string ModuloMasCritico { get; set; } = "N/A";
+    public string ModuloMasRestaurado { get; set; } = "N/A";
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Resumen Auditoría");
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        
+        var prods = await productosService.ListarPapelera();
+        EliminadosProductos = prods.Count;
+
+        var peds = await pedidosService.ListarPapelera();
+        EliminadosPedidos = peds.Count;
+
+        var provs = await proveedoresService.ListarPapelera(); 
+        EliminadosProveedores = provs.Count;
+
+       
+        DeterminarCritico();
+
+       
+        DeterminarRestaurado();
+    }
+
+    private int CalcularPorcentaje(int cantidad)
+    {
+        if (TotalEnPapelera == 0) return 0;
+        return (int)Math.Round((double)(cantidad * 100) / TotalEnPapelera);
+    }
+
+    private void DeterminarCritico()
+    {
+        if (TotalEnPapelera == 0) { ModuloMasCritico = "Ninguno"; return; }
+
+        if (EliminadosProductos >= EliminadosPedidos && EliminadosProductos >= EliminadosProveedores)
+            ModuloMasCritico = "Almacén";
+        else if (EliminadosPedidos >= EliminadosProductos && EliminadosPedidos >= EliminadosProveedores)
+            ModuloMasCritico = "Facturación";
+        else
+            ModuloMasCritico = "Proveedores";
+    }
+
+    private void DeterminarRestaurado()
+    {
+        if (TotalRestaurados == 0) { ModuloMasRestaurado = "Ninguno"; return; }
+
+        if (RestauradosProductos >= RestauradosPedidos && RestauradosProductos >= RestauradosProveedores)
+            ModuloMasRestaurado = "Almacén";
+        else if (RestauradosPedidos >= RestauradosProductos && RestauradosPedidos >= RestauradosProveedores)
+            ModuloMasRestaurado = "Facturación";
+        else
+            ModuloMasRestaurado = "Proveedores";
+    }
+}

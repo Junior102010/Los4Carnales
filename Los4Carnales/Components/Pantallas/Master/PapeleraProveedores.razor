@@ -7,15 +7,18 @@
 @layout MasterLayout
 
 @rendermode InteractiveServer
+@inject PageTitleService PageTitleService
 @inject ProveedoresServices proveedoresService
 @inject NavigationManager navigationManager
 @inject IJSRuntime JS
 
-@* Ya no necesitamos los divs contenedores master, el layout los maneja *@
-<div class="top-header-master">
-    Papelería de Proveedores
-</div>
 @attribute [Authorize(Roles = "Master")]
+
+<PageTitle>@PageTitleService.CurrentTitle</PageTitle>
+
+<div class="top-header-master">
+    @PageTitleService.CurrentTitle
+</div>
 
 <div class="content-body">
     <div class="controls-bar">
@@ -137,6 +140,7 @@
 
     protected override async Task OnInitializedAsync()
     {
+        PageTitleService.SetTitle("Provedores Papeleria");
         await CargarDatos();
     }
 
