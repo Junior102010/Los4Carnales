@@ -1,0 +1,166 @@
+﻿@page "/Entrada/Edit/{EntradaId:int}"
+@using Microsoft.AspNetCore.Authorization
+@rendermode InteractiveServer
+
+@inject EntradasServices entradasService
+@inject ProductosServices productosService
+@inject NavigationManager navigationManager
+@inject PageTitleService PageTitleService
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Detalles de Entrada</PageTitle>
+
+<SectionContent SectionName="TituloPagina">
+    <div class="d-flex justify-content-center w-100">
+        <h3 class="m-0 fw-bold">Detalles de Entrada</h3>
+    </div>
+</SectionContent>
+
+<div class="container">
+    <div class="card card-glass rounded-4 p-2">
+        
+        <EditForm Model="Entrada" OnValidSubmit="Guardar" FormName="EditarEntradaForm">
+            <DataAnnotationsValidator />
+            
+            <div class="card-body">
+                
+              
+                <h6 class="fw-bold text-muted mb-3">Datos Generales (Editable)</h6>
+                <div class="row mb-4">
+                   
+                    <div class="col-md-3">
+                        <label class="form-label text-muted small fw-bold mb-1">Fecha</label>
+                        <InputDate class="form-control input-glass" @bind-Value="Entrada.FechaEntrada" />
+                        <ValidationMessage For="(() => Entrada.FechaEntrada)" />
+                    </div>
+                    
+                    
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-bold mb-1">Proveedor</label>
+                        <InputSelect class="form-select input-glass" @bind-Value="Entrada.ProveedorId">
+                            <option value="0" disabled>Seleccione...</option>
+                            @foreach (var prov in ListaProveedores)
+                            {
+                                <option value="@prov.ProveedorId">@prov.Nombre</option>
+                            }
+                        </InputSelect>
+                        <ValidationMessage For="(() => Entrada.ProveedorId)" />
+                    </div>
+
+                  
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small fw-bold mb-1">Referencia / Factura</label>
+                        <InputText class="form-control input-glass" @bind-Value="Entrada.Concepto" />
+                        
+                        <ValidationMessage For="(() => Entrada.Concepto)" />
+                    </div>
+                </div>
+
+                <hr class="border-secondary opacity-25" />
+
+               
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-muted m-0">Productos Recibidos</h6>
+                    <span class="badge bg-success bg-opacity-75">Solo Lectura</span>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover bg-transparent align-middle">
+                        <thead class="text-black" style="background-color: rgba(0,0,0,0.03);">
+                            <tr>
+                                <th class="ps-3">Producto</th>
+                                <th class="text-center">Categoría</th>
+                                <th class="text-center">Unidad</th>
+                                <th class="text-center">Cantidad Recibida</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Entrada.EntradaDetalles)
+                            {
+                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                    <td class="ps-3">@(item.Producto?.NombreProducto ?? "Producto Eliminado")</td>
+                                    <td class="text-center small text-muted">@(item.Producto?.Categoria ?? "-")</td>
+                                    <td class="text-center small text-muted">@(item.Producto?.UnidadMedida ?? "-")</td>
+                                    <td class="text-center fw-bold fs-5" style="color: #3D5D35;">@item.Cantidad</td>
+                                </tr>
+                            }
+                            @if (!Entrada.EntradaDetalles.Any())
+                            {
+                                <tr>
+                                    <td colspan="4" class="text-center text-muted">No hay detalles disponibles.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                @if (!string.IsNullOrEmpty(Mensaje))
+                {
+                    <div class="alert alert-danger mt-3 text-center py-2" role="alert">
+                        <small>@Mensaje</small>
+                    </div>
+                }
+            </div>
+
+           
+            <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center mt-2 pt-0 pb-3 px-4">
+                <a href="/Entrada/Index" class="btn btn-outline-secondary px-4">
+                    <span class="bi bi-arrow-left"></span> Volver
+                </a>
+                
+               
+                <button type="submit" class="btn btn-gradiente px-5">
+                    <span class="bi bi-floppy"></span> Guardar Cambios
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int EntradaId { get; set; }
+
+    [SupplyParameterFromForm]
+    public Entrada Entrada { get; set; } = new Entrada();
+
+    public List<Proveedores> ListaProveedores { get; set; } = new List<Proveedores>();
+    public string Mensaje { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Editar Entrada");
+        ListaProveedores = await entradasService.ListarProveedores();
+
+       
+        if (Entrada.EntradaId == 0)
+        {
+            var encontrada = await entradasService.Buscar(EntradaId);
+            if (encontrada != null)
+            {
+                Entrada = encontrada;
+            }
+            else
+            {
+                Mensaje = "Entrada no encontrada.";
+            }
+        }
+    }
+
+    public async Task Guardar()
+    {
+        
+        
+        var guardado = await entradasService.Guardar(Entrada);
+
+        if (guardado)
+        {
+            navigationManager.NavigateTo("/Entrada/Index");
+        }
+        else
+        {
+            Mensaje = "No se pudo actualizar la entrada.";
+        }
+    }
+}
