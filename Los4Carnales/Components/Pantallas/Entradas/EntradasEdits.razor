@@ -3,39 +3,34 @@
 @rendermode InteractiveServer
 
 @inject EntradasServices entradasService
-@inject ProductosServices productosService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
+@inject IJSRuntime JS
 
 @attribute [Authorize(Roles = "Administrador")]
 
 <PageTitle>Detalles de Entrada</PageTitle>
 
-<SectionContent SectionName="TituloPagina">
-    <div class="d-flex justify-content-center w-100">
-        <h3 class="m-0 fw-bold">Detalles de Entrada</h3>
-    </div>
-</SectionContent>
-
 <div class="container">
-    <div class="card card-glass rounded-4 p-2">
-        
-        <EditForm Model="Entrada" OnValidSubmit="Guardar" FormName="EditarEntradaForm">
+    <div class="card card-glass rounded-4 p-2 mt-4">
+
+        <EditForm Model="Entrada" OnValidSubmit="Guardar">
             <DataAnnotationsValidator />
-            
+
             <div class="card-body">
-                
-              
-                <h6 class="fw-bold text-muted mb-3">Datos Generales (Editable)</h6>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="fw-bold text-muted m-0">Datos Generales (Editable)</h6>
+                    <span class="badge bg-primary fs-6">Lote: @Entrada.NumeroLote</span>
+                </div>
+
                 <div class="row mb-4">
-                   
                     <div class="col-md-3">
                         <label class="form-label text-muted small fw-bold mb-1">Fecha</label>
                         <InputDate class="form-control input-glass" @bind-Value="Entrada.FechaEntrada" />
                         <ValidationMessage For="(() => Entrada.FechaEntrada)" />
                     </div>
-                    
-                    
+
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Proveedor</label>
                         <InputSelect class="form-select input-glass" @bind-Value="Entrada.ProveedorId">
@@ -48,18 +43,15 @@
                         <ValidationMessage For="(() => Entrada.ProveedorId)" />
                     </div>
 
-                  
                     <div class="col-md-5">
-                        <label class="form-label text-muted small fw-bold mb-1">Referencia / Factura</label>
+                        <label class="form-label text-muted small fw-bold mb-1">Referencia / Concepto</label>
                         <InputText class="form-control input-glass" @bind-Value="Entrada.Concepto" />
-                        
                         <ValidationMessage For="(() => Entrada.Concepto)" />
                     </div>
                 </div>
 
                 <hr class="border-secondary opacity-25" />
 
-               
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold text-muted m-0">Productos Recibidos</h6>
                     <span class="badge bg-success bg-opacity-75">Solo Lectura</span>
@@ -103,16 +95,20 @@
                 }
             </div>
 
-           
             <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center mt-2 pt-0 pb-3 px-4">
                 <a href="/Entrada/Index" class="btn btn-outline-secondary px-4">
                     <span class="bi bi-arrow-left"></span> Volver
                 </a>
-                
-               
-                <button type="submit" class="btn btn-gradiente px-5">
-                    <span class="bi bi-floppy"></span> Guardar Cambios
-                </button>
+
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-danger px-4" @onclick="Eliminar">
+                        <span class="bi bi-trash"></span> Eliminar Entrada
+                    </button>
+
+                    <button type="submit" class="btn btn-gradiente px-5">
+                        <span class="bi bi-floppy"></span> Guardar Cambios
+                    </button>
+                </div>
             </div>
         </EditForm>
     </div>
@@ -133,7 +129,6 @@
         PageTitleService.SetTitle("Editar Entrada");
         ListaProveedores = await entradasService.ListarProveedores();
 
-       
         if (Entrada.EntradaId == 0)
         {
             var encontrada = await entradasService.Buscar(EntradaId);
@@ -150,8 +145,6 @@
 
     public async Task Guardar()
     {
-        
-        
         var guardado = await entradasService.Guardar(Entrada);
 
         if (guardado)
@@ -161,6 +154,28 @@
         else
         {
             Mensaje = "No se pudo actualizar la entrada.";
+        }
+    }
+
+   
+    public async Task Eliminar()
+    {
+        
+        bool confirmar = await JS.InvokeAsync<bool>("confirm", "⚠️ ¿Está seguro de eliminar esta Entrada? Esto restará los productos del inventario.");
+
+        if (confirmar)
+        {
+            
+            var eliminado = await entradasService.Eliminar(Entrada.EntradaId);
+
+            if (eliminado)
+            {
+                navigationManager.NavigateTo("/Entrada/Index");
+            }
+            else
+            {
+                Mensaje = "No se pudo eliminar la entrada.";
+            }
         }
     }
 }
