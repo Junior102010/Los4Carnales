@@ -1,112 +1,132 @@
 ﻿@page "/Factura/Details/{PedidoId:int}"
 @rendermode InteractiveServer
 
+@using Microsoft.AspNetCore.Authorization
+
 @inject PedidosServices pedidosService
 @inject NavigationManager navigationManager
+@inject PageTitleService PageTitleService
+
+@attribute [Authorize(Roles = "Administrador")]
 
 <PageTitle>Factura @(FacturaActual?.CodigoFactura ?? "Detalle")</PageTitle>
 
 @if (PedidoActual == null)
 {
-    <div class="alert alert-info text-center">
-        <div class="spinner-border text-primary" role="status">
+    <div class="container text-center mt-5">
+        <div class="spinner-border" style="color: #3D5D35;" role="status">
             <span class="visually-hidden">Cargando...</span>
         </div>
-        <p>Cargando datos de la factura...</p>
+        <p class="mt-3 text-muted fw-bold">Cargando datos de la factura...</p>
     </div>
 }
 else
 {
     <div class="container my-4">
-        <div class="d-flex justify-content-between mb-3 d-print-none">
-            <a href="/Facturacion/Index" class="btn btn-secondary">
+
+        @* --- BOTONES DE ACCIÓN (Ocultos al imprimir) --- *@
+        <div class="d-flex justify-content-between mb-4 d-print-none">
+            <a href="/Facturacion/Index" class="btn btn-outline-secondary px-4 rounded-pill">
                 <i class="bi bi-arrow-left"></i> Volver
             </a>
 
-            <button class="btn btn-primary" onclick="window.print()">
+            <button class="btn btn-gradiente px-4 rounded-pill shadow-sm" onclick="window.print()">
                 <i class="bi bi-printer"></i> Imprimir Factura
             </button>
         </div>
 
-        <div class="card shadow-lg border-0 factura-sheet">
+        @* --- CONTENEDOR DE LA FACTURA --- *@
+        <div class="card shadow-lg border-0 factura-sheet mx-auto" style="max-width: 850px; background-color: #ffffff;">
             <div class="card-body p-5">
 
-                <div class="row border-bottom pb-4 mb-4">
-                    <div class="col-md-6">
-                        <h2 class="text-primary fw-bold text-uppercase">Factura</h2>
-
-                        <div class="text-dark fs-4 fw-bold mb-1">Pollera Los Dos Carnales</div>
-                        <div class="text-muted small">
+                @* 1. Encabezado de la Empresa *@
+                <div class="row border-bottom pb-4 mb-4 align-items-center">
+                    <div class="col-md-7">
+                        <h2 class="fw-bolder text-uppercase mb-1" style="color: #3D5D35; letter-spacing: 1px;">Pollera Los 4 Carnales</h2>
+                        <p class="text-muted small mb-0">
                             Calle 27 de Febrero, Los Mangos<br />
                             El Factor, María Trinidad Sánchez<br />
-                            RNC: N/A
+                            <strong>Tel:</strong> 809-XXX-XXXX | <strong>RNC:</strong> N/A
+                        </p>
+                    </div>
+                    <div class="col-md-5 text-end">
+                        <h3 class="fw-bold mb-1" style="color: #796e65; letter-spacing: 2px;">FACTURA</h3>
+                        <h5 class="fw-bold text-dark mb-2">Nº @(FacturaActual?.CodigoFactura ?? "PENDIENTE")</h5>
+                        <div class="text-muted small">
+                            <strong>Fecha de Emisión:</strong><br />
+                            @(FacturaActual?.FechaEmision.ToString("dd/MM/yyyy hh:mm tt") ?? DateTime.Now.ToString("dd/MM/yyyy"))
                         </div>
                     </div>
+                </div>
 
-                    <div class="col-md-6 text-end">
-                        <h4 class="mb-1 text-secondary">Nº @(FacturaActual?.CodigoFactura ?? "PENDIENTE")</h4>
-                        <div class="text-muted">Fecha: @(FacturaActual?.FechaEmision.ToShortDateString() ?? DateTime.Now.ToShortDateString())</div>
-                        <div class="badge bg-success mt-2">Estado: @PedidoActual.Estado</div>
+                @* 2. Información del Cliente *@
+                <div class="row mb-5">
+                    <div class="col-md-12">
+                        <div class="p-3 rounded-3" style="background-color: #fcf9f2; border-left: 5px solid #3D5D35;">
+                            <h6 class="text-uppercase fw-bold mb-2" style="color: #796e65; font-size: 0.85rem;">Facturado a:</h6>
+                            <h5 class="fw-bold mb-1 text-dark">@PedidoActual.Cliente?.NombreCliente @PedidoActual.Cliente?.ApellidoCliente</h5>
+                            <p class="mb-0 text-muted small">
+                                <i class="bi bi-geo-alt-fill me-1" style="color: #3D5D35;"></i> @PedidoActual.Cliente?.CalleCliente, @PedidoActual.Cliente?.Sector
+                                <span class="mx-2">|</span>
+                                <i class="bi bi-telephone-fill me-1" style="color: #3D5D35;"></i> @PedidoActual.Cliente?.TelefonoCliente
+                            </p>
+                        </div>
                     </div>
                 </div>
 
-                <div class="row mb-4">
-                    <div class="col-md-6">
-                        <h6 class="text-secondary text-uppercase fw-bold mb-2">Facturado a:</h6>
-                        <h5 class="fw-bold mb-1">@PedidoActual.Cliente?.NombreCliente @PedidoActual.Cliente?.ApellidoCliente</h5>
-                        <p class="mb-0 text-muted small"><i class="bi bi-geo-alt"></i> @PedidoActual.Cliente?.CalleCliente, @PedidoActual.Cliente?.Sector</p>
-                        <p class="mb-0 text-muted small"><i class="bi bi-telephone"></i> @PedidoActual.Cliente?.TelefonoCliente</p>
-                    </div>
-                </div>
-
-                <div class="table-responsive mb-4">
-                    <table class="table table-striped table-hover align-middle">
-                        <thead class="table-light text-uppercase small">
-                            <tr>
-                                <th>Descripción</th>
+                @* 3. Detalle de Productos *@
+                <div class="table-responsive mb-5">
+                    <table class="table table-borderless align-middle">
+                        <thead style="border-bottom: 2px solid #3D5D35; color: #796e65;">
+                            <tr class="text-uppercase small fw-bold">
+                                <th class="ps-2">Descripción</th>
                                 <th class="text-center">Cant.</th>
                                 <th class="text-end">Precio Unit.</th>
-                                <th class="text-end">Importe</th>
+                                <th class="text-end pe-2">Importe</th>
                             </tr>
                         </thead>
                         <tbody>
                             @foreach (var detalle in PedidoActual.Detalles)
                             {
-                                <tr>
-                                    <td>
-                                        <span class="fw-bold text-dark">@detalle.Producto?.NombreProducto</span>
+                                <tr style="border-bottom: 1px solid #f0e6d2;">
+                                    <td class="ps-2 py-3">
+                                        <span class="fw-bold text-dark">@(detalle.Producto?.NombreProducto ?? "Producto no especificado")</span>
                                     </td>
-                                    <td class="text-center">@detalle.Cantidad</td>
-                                    <td class="text-end">@detalle.PrecioUnitario.ToString("C2")</td>
-                                    <td class="text-end">@detalle.Importe.ToString("C2")</td>
+                                    <td class="text-center py-3">@detalle.Cantidad</td>
+                                    <td class="text-end py-3 text-muted">@detalle.PrecioUnitario.ToString("C2")</td>
+                                    <td class="text-end pe-2 py-3 fw-bold" style="color: #3D5D35;">@detalle.Importe.ToString("C2")</td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
 
-                <div class="row justify-content-end">
-                    <div class="col-md-5">
-                        <div class="border-top pt-3">
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">Subtotal:</span>
+                @* 4. Totales *@
+                <div class="row justify-content-end mb-4">
+                    <div class="col-md-5 col-sm-7">
+                        <div class="p-3 rounded-3" style="background-color: #fcf9f2;">
+                            <div class="d-flex justify-content-between mb-2 small text-muted">
+                                <span>Subtotal:</span>
                                 <span>@((PedidoActual.MontoTotal / 1.18).ToString("C2"))</span>
                             </div>
-                            <div class="d-flex justify-content-between mb-2">
-                                <span class="text-muted">ITBIS (18%):</span>
+                            <div class="d-flex justify-content-between mb-2 small text-muted">
+                                <span>ITBIS (18%):</span>
                                 <span>@((PedidoActual.MontoTotal - (PedidoActual.MontoTotal / 1.18)).ToString("C2"))</span>
                             </div>
-                            <div class="d-flex justify-content-between border-top border-2 pt-2 mt-2 bg-light p-2 rounded">
-                                <span class="h5 fw-bold mb-0">TOTAL:</span>
-                                <span class="h5 fw-bold text-primary mb-0">@PedidoActual.MontoTotal.ToString("C2")</span>
+                            <div class="d-flex justify-content-between border-top border-secondary border-opacity-25 pt-3 mt-2">
+                                <span class="h5 fw-bold mb-0" style="color: #796e65;">TOTAL:</span>
+                                <span class="h4 fw-bold mb-0" style="color: #3D5D35;">@PedidoActual.MontoTotal.ToString("C2")</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-5 pt-4 text-center border-top text-muted small">
-                    <p class="mb-0">Gracias por preferir a <strong>Pollera Los Dos Carnales</strong>.</p>
+                @* 5. Pie de Factura *@
+                <div class="mt-5 pt-4 text-center border-top">
+                    <p class="mb-1 text-dark fw-bold">¡Gracias por preferir a Pollera Los 4 Carnales!</p>
+                    <p class="small text-muted mb-0">Si tiene alguna duda con esta factura, por favor contáctenos.</p>
                 </div>
+
             </div>
         </div>
     </div>
@@ -121,6 +141,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
+        PageTitleService.SetTitle("Detalle de Factura");
         PedidoActual = await pedidosService.Buscar(PedidoId);
 
         if (PedidoActual != null)

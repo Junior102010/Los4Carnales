@@ -7,7 +7,6 @@ namespace Los4Carnales.Services;
 
 public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
 {
-    
     public async Task<List<Proveedores>> ListarProveedores()
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
@@ -41,7 +40,7 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
         await using var contexto = await DbFactory.CreateDbContextAsync();
         contexto.Entrada.Add(entrada);
 
-        
+        // Al crear la entrada, sumamos la existencia al almacén
         await AfectarExistencia(contexto, entrada.EntradaDetalles.ToArray(), true);
 
         return await contexto.SaveChangesAsync() > 0;
@@ -90,5 +89,71 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
             .Where(criterio)
             .AsNoTracking()
             .ToListAsync();
+    }
+
+
+    public async Task<bool> Eliminar(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        var entrada = await contexto.Entrada
+            .Include(e => e.EntradaDetalles)
+            .FirstOrDefaultAsync(e => e.EntradaId == id);
+
+        if (entrada == null)
+            return false;
+
+       
+        await AfectarExistencia(contexto, entrada.EntradaDetalles.ToArray(), false);
+
+      
+        entrada.Eliminado = true;
+        contexto.Update(entrada);
+
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    public async Task<List<Entrada>> ListarPapelera()
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Entrada
+            .IgnoreQueryFilters()
+            .Include(e => e.Proveedor)
+            .Include(e => e.EntradaDetalles) 
+            .Where(e => e.Eliminado)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<bool> Restaurar(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        var entrada = await contexto.Entrada
+            .IgnoreQueryFilters()
+            .Include(e => e.EntradaDetalles)
+            .FirstOrDefaultAsync(e => e.EntradaId == id);
+
+        if (entrada == null)
+            return false;
+
+        
+        await AfectarExistencia(contexto, entrada.EntradaDetalles.ToArray(), true);
+
+       
+        entrada.Eliminado = false;
+        contexto.Entrada.Update(entrada);
+
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminarPermanente(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        return await contexto.Entrada
+            .IgnoreQueryFilters()
+            .Where(e => e.EntradaId == id)
+            .ExecuteDeleteAsync() > 0;
     }
 }

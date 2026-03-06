@@ -1,10 +1,12 @@
 ﻿@implements IDisposable
 
 @inject NavigationManager NavigationManager
+@inject SweetAlertService Swal
+@rendermode InteractiveServer
 
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid text-center" style="transform: translateX(-15px);">
-        <a class="navbar-brand logo-centrado" href="/Bienvenida">
+        <a class="navbar-brand logo-centrado" href="/">
             <img src="Imagenes/Logo.png" alt="Logo" style="height: 140px; width: auto;" />
         </a>
     </div>
@@ -14,7 +16,6 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="nav flex-column">
-        
 
         <AuthorizeView Roles="Administrador">
             <Authorized>
@@ -62,12 +63,14 @@
             </Authorized>
         </AuthorizeView>
 
+       
         <AuthorizeView Roles="Master">
             <Authorized>
                 <div class="nav-item px-3">
-                    <NavLink class="nav-link" href="/Master/Proveedores">
-                        <span class="bi bi-trash" aria-hidden="true"></span> Papelera
-                    </NavLink>
+                  
+                    <a class="nav-link text-warning fw-bold" style="cursor: pointer;" @onclick="VerificarPinMaster">
+                        <span class="bi bi-shield-lock-fill" aria-hidden="true"></span> Papelera VIP
+                    </a>
                 </div>
             </Authorized>
         </AuthorizeView>
@@ -125,5 +128,49 @@
     {
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
-}
 
+    private async Task VerificarPinMaster()
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Bóveda de Seguridad",
+            Text = "Ingrese el PIN de Los 4 Carnales:",
+            Input = SweetAlertInputType.Password,
+            InputPlaceholder = "****",
+            Icon = SweetAlertIcon.Info,
+            ShowCancelButton = true,
+            ConfirmButtonText = "<i class=\"bi bi-unlock-fill\"></i> Desbloquear",
+            CancelButtonText = "Cancelar",
+            ConfirmButtonColor = "#3D5D35",
+            CancelButtonColor = "#6c757d"
+        });
+
+        
+        if (!string.IsNullOrEmpty(result.Value))
+        {
+            string pinIngresado = result.Value;
+
+            
+            string[] pinesMaestros = {
+              "04200327", 
+              "11200527"  
+        
+        };
+
+            if (pinesMaestros.Contains(pinIngresado))
+            {
+                NavigationManager.NavigateTo("/Master/Resumen");
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Acceso Denegado",
+                    Text = "El PIN ingresado es incorrecto.",
+                    Icon = SweetAlertIcon.Error,
+                    ConfirmButtonColor = "#C15349"
+                });
+            }
+        }
+    }
+}

@@ -59,6 +59,7 @@ builder.Services.AddScoped<AbonosService>();
 builder.Services.AddScoped<ConfiguracionService>();
 builder.Services.AddSweetAlert2();
 
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -92,7 +93,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
+app.MapRazorComponents<Los4Carnales.Components.App>()
     .AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.

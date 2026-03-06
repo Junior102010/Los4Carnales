@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Authorization
 
 @rendermode InteractiveServer
-@inject EntradasServices entradaServices
+@inject EntradasServices entradasService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
 
@@ -11,74 +11,84 @@
 <PageTitle>Registro de Entradas</PageTitle>
 
 <div class="container">
-
     <div class="card card-glass rounded-4 p-2">
-
         <div class="card-body">
 
-            @* --- FILTROS --- *@
-            <div class="row align-items-end mb-4">
+            @* --- FILTROS DE FECHA --- *@
+            <div class="row align-items-end mb-3">
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Desde</label>
+                    <InputDate class="form-control input-glass" @bind-Value="FechaInicio" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Hasta</label>
+                    <InputDate class="form-control input-glass" @bind-Value="FechaFin" />
+                </div>
+            </div>
 
+            @* --- FILTROS DE BÚSQUEDA --- *@
+            <div class="row align-items-end mb-4">
                 <div class="col-md-3">
                     <label class="form-label text-muted small fw-bold mb-1">Filtrar por</label>
                     <InputSelect class="form-select input-glass" @bind-Value="Filtro">
                         <option value="" selected disabled>Elija una opción</option>
-                        <option value="Nombre">Nombre</option>
-                        <option value="Categoria">Categoría</option>
+                        <option value="Lote">Nº Lote</option>
+                        <option value="Proveedor">Proveedor</option>
+                        <option value="Concepto">Concepto / Factura</option>
                     </InputSelect>
                 </div>
 
-                <div class="col-md-4">
+                <div class="col-md-3">
                     <label class="form-label text-muted small fw-bold mb-1">Búsqueda</label>
                     <div class="input-group">
-                        <input class="form-control input-glass" @bind="ValorFiltro" placeholder="Buscar..." />
+                        <input class="form-control input-glass" @bind="ValorFiltro" placeholder="Escriba para buscar..." />
                         <button type="button" class="btn btn-outline-success bi bi-search" @onclick="Buscar"></button>
-                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Restablecer"></button>
                     </div>
                 </div>
 
-                <div class="col-md-1"></div>
-
-                <div class="col-md-4 text-end">
+                <div class="col-md-6 text-end">
                     <div class="d-flex justify-content-end gap-2">
-
+                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Restablecer"> Limpiar</button>
                         <a href="/Entrada/Create" class="btn btn-gradiente px-3">
-                            <span class="bi bi-plus-square"></span> Crear
+                            <span class="bi bi-plus-square"></span> Nueva Entrada
                         </a>
                     </div>
                 </div>
             </div>
 
-            @* --- TABLA --- *@
+            @* --- TABLA LIMPIA (SIN ID) --- *@
             <div class="table-responsive">
                 <table class="table table-hover bg-transparent align-middle">
                     <thead class="text-black" style="background-color: rgba(0,0,0,0.03); border-bottom: 2px solid rgba(0,0,0,0.1);">
                         <tr>
-                            <th class="py-3 ps-3">Fecha</th>
-                            <th class="py-3">Concepto</th>
+                            <th class="py-3 ps-3">Nº Lote</th>
+                            <th class="py-3">Fecha</th>
                             <th class="py-3">Proveedor</th>
-                            <th class="py-3">Cant. Articulos</th>
-
+                            <th class="py-3">Concepto</th>
+                            <th class="py-3 text-center">Total Items</th>
                             <th class="py-3 text-center">Opciones</th>
                         </tr>
                     </thead>
                     <tbody style="background-color: transparent;">
-                        @foreach (var entrada in ListaEntrada)
+                        @foreach (var entrada in ListaEntradas)
                         {
                             <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
-                                <td class="ps-3 fw-bold text-muted">@entrada.FechaEntrada</td>
+                                <td class="ps-3 fw-bold text-primary">@entrada.NumeroLote</td>
+                                <td>@entrada.FechaEntrada.ToShortDateString()</td>
+                                <td>@(entrada.Proveedor?.Nombre ?? "Desconocido")</td>
                                 <td>@entrada.Concepto</td>
-                                <td>@entrada.Proveedor</td>
-                                <td>
-                                    
-                                        @entrada.EntradaDetalles.Count();
-                                  
+                                <td class="text-center fw-bold" style="color: #3D5D35;">
+                                    @entrada.EntradaDetalles.Sum(d => d.Cantidad)
                                 </td>
-
-
                                 <td class="text-center">
-                                    <a href="/Entrada/Edit/@entrada.EntradaId" class="btn btn-sm btn-outline-success border-0 bi bi-pencil-square fs-5"></a>
+                                    <a href="/Entrada/Edit/@entrada.EntradaId" class="btn btn-sm btn-outline-success border-0 bi bi-eye fs-5" title="Ver Detalle"></a>
                                 </td>
+                            </tr>
+                        }
+                        @if (!ListaEntradas.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No se encontraron entradas.</td>
                             </tr>
                         }
                     </tbody>
@@ -86,50 +96,56 @@
             </div>
         </div>
 
-        @* --- FOOTER --- *@
         <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between text-muted mt-2 pt-0 pb-3 px-4">
-            <small class="fw-bold">Cantidad: @ListaEntrada.Count()</small>
-            
+            <small class="fw-bold">Total de Entradas: @ListaEntradas.Count()</small>
         </div>
     </div>
 </div>
 
 @code {
-    public List<Entrada> ListaEntrada { get; set; } = new List<Entrada>();
+    public List<Entrada> ListaEntradas { get; set; } = new List<Entrada>();
 
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
 
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
-        PageTitleService.SetTitle("Almacen");
-        ListaEntrada = await entradaServices.Listar(p => p.EntradaId > 0);
+        PageTitleService.SetTitle("Entradas de Almacén");
+        FechaInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        FechaFin = DateTime.Now;
+
+        await Restablecer();
     }
 
     private async Task Buscar()
     {
+        var lista = await entradasService.Listar(e => e.EntradaId > 0);
+
+        if (FechaInicio.HasValue)
+            lista = lista.Where(e => e.FechaEntrada.Date >= FechaInicio.Value.Date).ToList();
+
+        if (FechaFin.HasValue)
+            lista = lista.Where(e => e.FechaEntrada.Date <= FechaFin.Value.Date).ToList();
+
         if (!string.IsNullOrWhiteSpace(ValorFiltro))
         {
-            if (Filtro == "Nombre")
-            {
-                ListaEntrada = await entradaServices.Listar(
-                    p => p.Concepto != null && p.Concepto.ToLower().Contains(ValorFiltro.ToLower()));
-            }
-            // else if (Filtro == "Categoria")
-            // {
-            //     ListaProductos = await productosService.Listar(
-            //         p => p.Categoria != null && p.Categoria.ToLower().Contains(ValorFiltro.ToLower()));
-            // }
+            if (Filtro == "Proveedor")
+                lista = lista.Where(e => e.Proveedor != null && e.Proveedor.Nombre.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
+            else if (Filtro == "Concepto")
+                lista = lista.Where(e => e.Concepto != null && e.Concepto.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
+            else if (Filtro == "Lote")
+                lista = lista.Where(e => e.NumeroLote != null && e.NumeroLote.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
         }
-        else
-        {
-            ListaEntrada = await entradaServices.Listar(p => p.EntradaId > 0);
-        }
+
+        ListaEntradas = lista;
     }
 
     private async Task Restablecer()
     {
-        ListaEntrada = await entradaServices.Listar(p => p.EntradaId > 0);
+        ListaEntradas = await entradasService.Listar(e => e.EntradaId > 0);
         Filtro = string.Empty;
         ValorFiltro = string.Empty;
     }
