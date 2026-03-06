@@ -1,11 +1,17 @@
 ﻿@page "/Entrada/Edit/{EntradaId:int}"
+
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Los4Carnales.Data
+
 @rendermode InteractiveServer
 
 @inject EntradasServices entradasService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
-@inject IJSRuntime JS
+@inject SweetAlertService Swal
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
 
 @attribute [Authorize(Roles = "Administrador")]
 
@@ -87,12 +93,6 @@
                     </table>
                 </div>
 
-                @if (!string.IsNullOrEmpty(Mensaje))
-                {
-                    <div class="alert alert-danger mt-3 text-center py-2" role="alert">
-                        <small>@Mensaje</small>
-                    </div>
-                }
             </div>
 
             <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center mt-2 pt-0 pb-3 px-4">
@@ -101,12 +101,16 @@
                 </a>
 
                 <div class="d-flex gap-2">
-                    <button type="button" class="btn btn-outline-danger px-4" @onclick="Eliminar">
-                        <span class="bi bi-trash"></span> Eliminar Entrada
-                    </button>
+                    @* Solo mostramos el botón eliminar si ya existe en BD *@
+                    @if (Entrada.EntradaId > 0)
+                    {
+                        <button type="button" class="btn btn-outline-danger px-4" @onclick="Eliminar">
+                            <span class="bi bi-trash"></span> Eliminar
+                        </button>
+                    }
 
                     <button type="submit" class="btn btn-gradiente px-5">
-                        <span class="bi bi-floppy"></span> Guardar Cambios
+                        <span class="bi bi-floppy"></span> Guardar
                     </button>
                 </div>
             </div>
@@ -122,59 +126,123 @@
     public Entrada Entrada { get; set; } = new Entrada();
 
     public List<Proveedores> ListaProveedores { get; set; } = new List<Proveedores>();
-    public string Mensaje { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.SetTitle("Editar Entrada");
         ListaProveedores = await entradasService.ListarProveedores();
 
-        if (Entrada.EntradaId == 0)
+        if (EntradaId > 0)
         {
             var encontrada = await entradasService.Buscar(EntradaId);
             if (encontrada != null)
             {
                 Entrada = encontrada;
             }
-            else
-            {
-                Mensaje = "Entrada no encontrada.";
-            }
         }
     }
 
     public async Task Guardar()
     {
-        var guardado = await entradasService.Guardar(Entrada);
+        try
+        {
+            var ok = await entradasService.Guardar(Entrada);
 
-        if (guardado)
-        {
-            navigationManager.NavigateTo("/Entrada/Index");
+            if (ok)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "¡Guardado!",
+                    Text = "La entrada se guardó exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+
+                navigationManager.NavigateTo("/Entrada/Index");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            Mensaje = "No se pudo actualizar la entrada.";
+            await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Error",
+                Text = "Ocurrió un problema al guardar.",
+                Icon = SweetAlertIcon.Error
+            });
+            Console.WriteLine(ex.Message);
         }
     }
 
-   
     public async Task Eliminar()
     {
-        
-        bool confirmar = await JS.InvokeAsync<bool>("confirm", "⚠️ ¿Está seguro de eliminar esta Entrada? Esto restará los productos del inventario.");
-
-        if (confirmar)
+        var confirmacion = await Swal.FireAsync(new SweetAlertOptions
         {
-            
-            var eliminado = await entradasService.Eliminar(Entrada.EntradaId);
+            Title = "¿Estás seguro?",
+            Text = $"¿Deseas eliminar la entrada {Entrada.NumeroLote} y restar su inventario?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "<i class=\"bi bi-trash-fill me-1\"></i> Eliminar",
+            CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+        });
 
-            if (eliminado)
+        if (!string.IsNullOrEmpty(confirmacion.Value))
+        {
+            var passwordResult = await Swal.FireAsync(new SweetAlertOptions
             {
-                navigationManager.NavigateTo("/Entrada/Index");
-            }
-            else
+                Title = "Confirmar identidad",
+                Text = "Ingresa tu contraseña de administrador para autorizar:",
+                Input = SweetAlertInputType.Password,
+                InputPlaceholder = "Tu contraseña",
+                ShowCancelButton = true,
+                ConfirmButtonText = "<i class=\"bi bi-shield-lock-fill me-1\"></i> Verificar",
+                CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+            });
+
+            if (!string.IsNullOrEmpty(passwordResult.Value))
             {
-                Mensaje = "No se pudo eliminar la entrada.";
+                string passwordIngresado = passwordResult.Value;
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var user = await UserManager.GetUserAsync(authState.User);
+
+                bool passwordCorrecto = false;
+                if (user != null)
+                {
+                    passwordCorrecto = await UserManager.CheckPasswordAsync(user, passwordIngresado);
+                }
+
+                if (passwordCorrecto)
+                {
+                    // Llama al servicio de Entradas para hacer el borrado lógico
+                    var ok = await entradasService.Eliminar(Entrada.EntradaId);
+
+                    if (ok)
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "¡Eliminado!",
+                            Text = "La entrada se borró correctamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+                        navigationManager.NavigateTo("/Entrada/Index");
+                    }
+                    else
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "No se pudo eliminar de la base de datos.",
+                            Icon = SweetAlertIcon.Error
+                        });
+                    }
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Acceso Denegado",
+                        Text = "La contraseña es incorrecta. Operación cancelada.",
+                        Icon = SweetAlertIcon.Error
+                    });
+                }
             }
         }
     }

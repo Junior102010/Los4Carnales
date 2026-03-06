@@ -6,6 +6,7 @@
 @inject ProductosServices productosService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
+@inject SweetAlertService Swal
 
 @attribute [Authorize(Roles = "Administrador")]
 
@@ -54,7 +55,6 @@
 
                 <hr class="border-secondary opacity-25" />
 
-                @* (Toda la zona de agregar productos se queda exactamente como la tenías, ya que funcionaba excelente) *@
                 <div class="card bg-light border-0 mb-3 p-3">
                     <h6 class="text-muted fw-bold mb-3">Agregar Producto al Inventario</h6>
 
@@ -200,7 +200,6 @@
 
     private void GenerarLote()
     {
-        // Ej: LT-241229-458
         string fecha = DateTime.Now.ToString("yyMMdd");
         string random = Random.Shared.Next(100, 999).ToString();
         Entrada.NumeroLote = $"LT-{fecha}-{random}";
@@ -242,12 +241,36 @@
         if (Entrada.ProveedorId <= 0) { Mensaje = "Debe seleccionar un proveedor."; return; }
         if (Entrada.EntradaDetalles.Count == 0) { Mensaje = "Debe agregar al menos un producto al detalle."; return; }
 
-        var guardado = await entradasService.Guardar(Entrada);
+        try
+        {
+            var guardado = await entradasService.Guardar(Entrada);
 
-        if (guardado)
-            navigationManager.NavigateTo("/Entrada/Index");
-        else
-            Mensaje = "Error al intentar guardar la entrada.";
+            if (guardado)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "¡Guardado!",
+                    Text = "La entrada se registró exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+
+                navigationManager.NavigateTo("/Entrada/Index");
+            }
+            else
+            {
+                Mensaje = "Error al intentar guardar la entrada.";
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Error",
+                Text = "Ocurrió un problema al guardar la entrada.",
+                Icon = SweetAlertIcon.Error
+            });
+            Console.WriteLine(ex.Message);
+        }
     }
 
     private void CalcularCantidad()

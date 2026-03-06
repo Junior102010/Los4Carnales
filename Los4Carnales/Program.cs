@@ -59,6 +59,7 @@ builder.Services.AddScoped<AbonosService>();
 builder.Services.AddScoped<ConfiguracionService>();
 builder.Services.AddSweetAlert2();
 
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
