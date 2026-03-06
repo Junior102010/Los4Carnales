@@ -1,1 +1,26 @@
-﻿
+﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+
+<PageTitle>Inicio - Los 4 Carnales</PageTitle>
+
+<div class="d-flex flex-column justify-content-center align-items-center text-center" style="height: 80vh;">
+
+    <img src="Imagenes/Logo.png" alt="Los 4 Carnales" style="height: 180px; margin-bottom: 20px;" />
+
+    <h1 style="color: #3D5D35;" class="fw-bold">Bienvenido al Sistema</h1>
+    <p class="text-muted fs-5">Seleccione una opción en el menú de la izquierda para comenzar.</p>
+
+   
+    <AuthorizeView Roles="Master">
+        <Authorized>
+            <div class="mt-4 p-4 rounded-4 shadow-sm" style="background-color: #fffbf0; border: 2px solid #eecfa1; max-width: 500px;">
+                <i class="bi bi-shield-lock-fill" style="font-size: 2.5rem; color: #d39e00;"></i>
+                <h4 class="fw-bold mt-2" style="color: #23120b;">Zona Restringida</h4>
+                <p class="text-muted mb-0" style="font-size: 1.1rem;">
+                    Para acceder a la papelera y tener control total, haga clic en <b>"Papelera VIP"</b> en el menú lateral y coloque el PIN de verificación de uno de los 4 miembros.
+                </p>
+            </div>
+        </Authorized>
+    </AuthorizeView>
+
+</div>

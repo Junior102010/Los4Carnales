@@ -1,7 +1,6 @@
 ﻿@implements IDisposable
 
 @inject NavigationManager NavigationManager
-@* Inyectamos SweetAlert para la alerta del PIN *@
 @inject SweetAlertService Swal
 @rendermode InteractiveServer
 
@@ -64,11 +63,11 @@
             </Authorized>
         </AuthorizeView>
 
-        @* --- ZONA MASTER CON DOBLE SEGURIDAD --- *@
+       
         <AuthorizeView Roles="Master">
             <Authorized>
                 <div class="nav-item px-3">
-                    @* Cambiamos el NavLink por un enlace clickeable que llama al método *@
+                  
                     <a class="nav-link text-warning fw-bold" style="cursor: pointer;" @onclick="VerificarPinMaster">
                         <span class="bi bi-shield-lock-fill" aria-hidden="true"></span> Papelera VIP
                     </a>
@@ -130,7 +129,6 @@
         NavigationManager.LocationChanged -= OnLocationChanged;
     }
 
-    // --- NUEVO MÉTODO DE SEGURIDAD PARA EL PIN ---
     private async Task VerificarPinMaster()
     {
         var result = await Swal.FireAsync(new SweetAlertOptions
@@ -147,20 +145,24 @@
             CancelButtonColor = "#6c757d"
         });
 
-        // Verificamos si escribió algo y le dio a confirmar
+        
         if (!string.IsNullOrEmpty(result.Value))
         {
             string pinIngresado = result.Value;
 
-            // ESTE ES EL PIN SECRETO (Cámbialo por el que ustedes 4 decidan)
-            if (pinIngresado == "2024")
+            
+            string[] pinesMaestros = {
+              "04200327", 
+              "11200527"  
+        
+        };
+
+            if (pinesMaestros.Contains(pinIngresado))
             {
-                // Si es correcto, lo mandamos al Resumen del Master (el que hicimos hoy)
                 NavigationManager.NavigateTo("/Master/Resumen");
             }
             else
             {
-                // Si falla, mostramos error
                 await Swal.FireAsync(new SweetAlertOptions
                 {
                     Title = "Acceso Denegado",
