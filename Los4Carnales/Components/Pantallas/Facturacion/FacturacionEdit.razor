@@ -24,9 +24,8 @@
                 <div class="row mb-4">
                     <div class="col-md-8">
                         <h5 class="fw-bold text-muted mb-1">
-                            <i class="bi bi-person-circle"></i> @Pedido.Cliente?.NombreCliente @Pedido.Cliente?.ApellidoCliente
+                            <i class="bi bi-person-circle"></i> @Pedido.NombreCliente
                         </h5>
-                        <p class="mb-1 text-muted small"><i class="bi bi-telephone"></i> @Pedido.Cliente?.TelefonoCliente</p>
                         <p class="mb-0 text-muted small fst-italic">
                             <i class="bi bi-geo-alt"></i> @(Pedido.ReferenciaSitio ?? "Sin dirección")
                             @if (Pedido.Delivery)
@@ -118,7 +117,7 @@
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.SetTitle("Editar Pedido");
-        if (PedidoId > 0 && Pedido.PedidoId == 0) // Pequeña corrección para asegurar carga
+        if (PedidoId > 0 && Pedido.PedidoId == 0) 
         {
             var encontrado = await pedidosService.Buscar(PedidoId);
             if (encontrado != null)
@@ -134,9 +133,6 @@
 
     public async Task Guardar()
     {
-        // ELIMINADO: Todo el bloque if(Pedido.Estado == "Entregado") {...}
-        // La lógica de inventario ahora la hace pedidosService.Guardar automáticamente.
-
         var guardado = await pedidosService.Guardar(Pedido);
 
         if (guardado)
@@ -158,7 +154,6 @@
 
     private string ObtenerEstiloEstado(string estado)
     {
-        // ... (Tu código de estilos sigue igual)
         return estado switch
         {
             "Pendiente" => "border-color: #ffc107; color: #856404; background-color: #fff3cd;",

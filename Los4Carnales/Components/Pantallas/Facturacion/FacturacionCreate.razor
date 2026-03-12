@@ -8,7 +8,6 @@
 @inject SweetAlertService Swal
 @inject PedidosServices pedidosService
 @inject ProductosServices productosService
-@inject ClientesServices clientesService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
 @inject ApplicationDbContext context
@@ -40,19 +39,10 @@
                     <div class="col-md-5">
                         <label class="form-label text-muted small fw-bold mb-1">Cliente</label>
                         <div class="input-group">
-                            <InputSelect class="form-select input-glass" @bind-Value="Pedido.ClienteId">
-                                <option value="0" selected disabled>Seleccione un cliente...</option>
-                                @foreach (var cliente in ListaClientes)
-                                {
-                                    <option value="@cliente.ClienteId">@cliente.NombreCliente @cliente.ApellidoCliente</option>
-                                }
-                            </InputSelect>
-
-                            <a href="/Cliente/Create" class="btn btn-outline-secondary" target="_blank" title="Nuevo Cliente">
-                                <i class="bi bi-plus-lg"></i>
-                            </a>
+                            <InputText class="form-control input-glass" @bind-Value="Pedido.NombreCliente" placeholder="Nombre Cliente...">
+                            </InputText>
                         </div>
-                        <ValidationMessage For="(() => Pedido.ClienteId)" />
+                        <ValidationMessage For="(() => Pedido.NombreCliente)" />
                     </div>
 
 
@@ -189,7 +179,6 @@
     public Pedido Pedido { get; set; } = new Pedido();
     public PedidoDetalle Detalle { get; set; } = new PedidoDetalle { Cantidad = 1 };
 
-    public List<Cliente> ListaClientes { get; set; } = new List<Cliente>();
     public List<Producto> ListaProductos { get; set; } = new List<Producto>();
 
     public string Mensaje { get; set; } = string.Empty;
@@ -197,44 +186,7 @@
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.SetTitle("Crear Pedido");
-        // Verifica si hay clientes
-        if (!await context.Cliente.AnyAsync())
-        {
-            // Si no hay, crea dos clientes de prueba
-            var clientes = new List<Cliente>
-    {
-        new Cliente
-        {
-            UserId = null,
-            NombreCliente = "Juan",
-            ApellidoCliente = "Pérez",
-            TelefonoCliente = "809-555-1234",
-            Sector = "Los Mina",
-            CalleCliente = "Calle 1ra",
-            ViviendaCliente = "Casa #10",
-            DescripcionCliente = "Cliente frecuente",
-            Eliminado = false
-        },
-        new Cliente
-        {
-            UserId = null,
-            NombreCliente = "María",
-            ApellidoCliente = "Gómez",
-            TelefonoCliente = "829-555-5678",
-            Sector = "Alma Rosa",
-            CalleCliente = "Calle Duarte",
-            ViviendaCliente = "Apto 2B",
-            DescripcionCliente = "Prefiere pago en efectivo",
-            Eliminado = false
-        }
-    };
-
-            // Inserta los clientes en la base
-            await context.Cliente.AddRangeAsync(clientes);
-            await context.SaveChangesAsync();
-        }
-
-        ListaClientes = await clientesService.Listar(c => c.ClienteId > 0);
+      
         ListaProductos = await productosService.Listar(p => p.ProductoId > 0);
         Pedido.FechaPedido = DateTime.Now;
         Pedido.Estado = "Pendiente";
@@ -300,9 +252,9 @@
 
     public async Task Guardar()
     {
-        if (Pedido.ClienteId <= 0 || !Pedido.Detalles.Any())
+        if (!Pedido.Detalles.Any())
         {
-            Mensaje = "Faltan datos (Cliente o Productos).";
+            Mensaje = "Debe agregar al menos un producto.";
             return;
         }
 

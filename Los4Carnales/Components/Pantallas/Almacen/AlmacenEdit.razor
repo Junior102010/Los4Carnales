@@ -88,22 +88,26 @@
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Unidad de Medida</label>
                         <InputSelect class="form-select input-glass" @bind-Value="Producto.UnidadMedida">
-                            <option value="LB">Libra (LB)</option>
-                            <option value="UNID">Unidad (UNID)</option>
-                            <option value="KG">Kilogramo (KG)</option>
-                            <option value="LITRO">Litro</option>
-                            <option value="PAQ">Paquete</option>
-                            <option value="CAJA">Caja</option>
-                            <option value="SACO">Saco</option>
+                            <option value="Libra">Libra (LB)</option>
+                            <option value="Kilogramo">Kilogramo (KG)</option>
+                  
                         </InputSelect>
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Existencia Actual</label>
-                        <InputNumber class="form-control input-glass fw-bold" style="color: #3D5D35;" @bind-Value="Producto.Existencia" />
-                        <div class="form-text text-danger small fst-italic">
-                            <i class="bi bi-exclamation-triangle"></i> Ajustar solo por daños o errores.
-                        </div>
+                        @if (Producto.Existencia < 1)
+                        {
+                            <InputText class="form-control input-glass fw-bold" style="color: #3D5D35;" placeholder="Aún no existen entradas." @bind-Value="AvisoSinEntradas" disabled/>
+                        }
+                        else
+                        {
+                            <InputNumber class="form-control input-glass fw-bold" style="color: #3D5D35;" @bind-Value="Producto.Existencia" />
+                            <div class="form-text text-danger small fst-italic">
+                                <i class="bi bi-exclamation-triangle"></i> Ajustar solo por daños o errores.
+                            </div>
+                        }
+
                     </div>
                 </div>
 
@@ -141,6 +145,7 @@
     public Producto Producto { get; set; } = new Producto();
 
     public string Mensaje { get; set; } = string.Empty;
+    public string AvisoSinEntradas { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -157,6 +162,7 @@
                 Mensaje = "El producto no fue encontrado.";
             }
         }
+        Console.WriteLine(Producto.UnidadMedida);
     }
 
     public async Task Eliminar()
