@@ -40,11 +40,6 @@ public class TranferenciaServices(IDbContextFactory<ApplicationDbContext> DbFact
             Destino = transferencia.Destino,
             Monto = transferencia.Monto,
             Observaciones = transferencia.Observaciones,
-
-            ClienteId = transferencia.ClienteId,
-
-            Cliente = null,
-
             Imagenes = new List<TransferenciaImagen>()
         };
 

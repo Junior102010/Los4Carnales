@@ -10,10 +10,10 @@ public class  Usuario
     public int UsuarioId { get; set; }
 
     [Required]
-    public string Nombre { get; set; }
+    public string? Nombre { get; set; }
     [Required]
-    public string Clave { get; set; }
+    public string? Clave { get; set; }
     [Required]
-    public string Rol { get; set; }
+    public string? Rol { get; set; }
 
 }

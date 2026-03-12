@@ -14,17 +14,12 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Entrada> Entrada { get; set; }
 
-    public DbSet<Cliente> Cliente { get; set; }
-
 
     public DbSet<TransferenciaImagen> TransferenciaImagenes { get; set; }
-
     public DbSet<Categorias> Categoria { get; set; }
 
     public DbSet<Transferencia> Transferencia { get; set; }
-
     public DbSet<EntradaDetalle> EntradaDetalles { get; set; }
-    public DbSet<Abono> Abono { get; set; }
     public DbSet<UnidadMedida> UnidadMedida { get; set; }
     public DbSet<Sector> Sector { get; set; }
     public DbSet<Factura> Factura { get; set; }
@@ -34,21 +29,11 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<Cliente>()
-            .HasOne(c => c.User) 
-            .WithMany() 
-            .HasForeignKey(c => c.UserId)
-            .IsRequired(false) // Permite valores nulos en la DB
-            .OnDelete(DeleteBehavior.Restrict);
-
         modelBuilder.Entity<Proveedores>().HasQueryFilter(p => !p.Eliminado);
         modelBuilder.Entity<Pedido>().HasQueryFilter(p => !p.Eliminado);
         modelBuilder.Entity<Producto>().HasQueryFilter(p => !p.Eliminado);
         modelBuilder.Entity<Entrada>().HasQueryFilter(e => !e.Eliminado);
-        modelBuilder.Entity<Cliente>().HasQueryFilter(c => !c.Eliminado);
         modelBuilder.Entity<Categorias>().HasQueryFilter(c => !c.Eliminado);
-        modelBuilder.Entity<Transferencia>().HasQueryFilter(t => !t.Eliminado);
-        modelBuilder.Entity<Abono>().HasQueryFilter(a => !a.Eliminado);
         modelBuilder.Entity<UnidadMedida>().HasQueryFilter(u => !u.Eliminado);
         modelBuilder.Entity<Sector>().HasQueryFilter(s => !s.Eliminado);
         modelBuilder.Entity<Factura>().HasQueryFilter(f => !f.Eliminado);
@@ -64,12 +49,6 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
             .WithMany()
             .HasForeignKey(pd => pd.ProductoId)
             .IsRequired(false); // Esto evita que truene si el producto está "oculto" por el filtro
-
-        modelBuilder.Entity<Factura>()
-            .HasOne(f => f.Cliente)
-            .WithMany()
-            .HasForeignKey(f => f.ClienteId)
-            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Factura>()
             .HasOne(f => f.Pedido)

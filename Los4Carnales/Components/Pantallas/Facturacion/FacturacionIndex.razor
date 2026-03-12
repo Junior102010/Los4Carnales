@@ -75,10 +75,9 @@
 
 
                                 <td>
-                                    @if (pedido.Cliente != null)
+                                    @if (pedido.NombreCliente != string.Empty)
                                     {
-                                        <span>@pedido.Cliente.NombreCliente @pedido.Cliente.ApellidoCliente</span>
-                                        <div class="small text-muted fst-italic">@pedido.Cliente.TelefonoCliente</div>
+                                        <span>@pedido.NombreCliente</span>
                                     }
                                     else
                                     {
@@ -171,7 +170,7 @@
 
         if (!string.IsNullOrWhiteSpace(ValorFiltro))
         {
-            lista = lista.Where(p => (p.Cliente.NombreCliente.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase) || p.Cliente.ApellidoCliente.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase))
+            lista = lista.Where(p => (p.NombreCliente.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase))
             ).ToList();
         }
 

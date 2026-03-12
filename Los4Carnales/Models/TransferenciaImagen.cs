@@ -11,5 +11,5 @@ public class TransferenciaImagen
     public int TransferenciaId { get; set; }
 
     [Required]
-    public string RutaImagen { get; set; }
+    public string? RutaImagen { get; set; }
 }

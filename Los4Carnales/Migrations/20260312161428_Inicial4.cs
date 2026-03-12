@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Los4Carnales.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicial : Migration
+    public partial class Inicial4 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -30,9 +30,9 @@ namespace Los4Carnales.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Apellido = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Telefono = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Nombre = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Apellido = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Telefono = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -65,6 +65,26 @@ namespace Los4Carnales.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Categoria", x => x.CategoriaId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Pedido",
+                columns: table => new
+                {
+                    PedidoId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    FechaPedido = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    MontoTotal = table.Column<double>(type: "float", nullable: false),
+                    MetodoPago = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Estado = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Delivery = table.Column<bool>(type: "bit", nullable: false),
+                    Eliminado = table.Column<bool>(type: "bit", nullable: false),
+                    ReferenciaSitio = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NombreCliente = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Pedido", x => x.PedidoId);
                 });
 
             migrationBuilder.CreateTable(
@@ -278,131 +298,6 @@ namespace Los4Carnales.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Cliente",
-                columns: table => new
-                {
-                    ClienteId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    NombreCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ApellidoCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TelefonoCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Sector = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    CalleCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ViviendaCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    DescripcionCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Eliminado = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Cliente", x => x.ClienteId);
-                    table.ForeignKey(
-                        name: "FK_Cliente_AspNetUsers_UserId",
-                        column: x => x.UserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Entrada",
-                columns: table => new
-                {
-                    EntradaId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FechaEntrada = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Concepto = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Eliminado = table.Column<bool>(type: "bit", nullable: false),
-                    ProveedorId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Entrada", x => x.EntradaId);
-                    table.ForeignKey(
-                        name: "FK_Entrada_Proveedores_ProveedorId",
-                        column: x => x.ProveedorId,
-                        principalTable: "Proveedores",
-                        principalColumn: "ProveedorId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Abono",
-                columns: table => new
-                {
-                    AbonoId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    ClienteId = table.Column<int>(type: "int", nullable: false),
-                    Monto = table.Column<double>(type: "float", nullable: false),
-                    Observacion = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Fecha = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Eliminado = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Abono", x => x.AbonoId);
-                    table.ForeignKey(
-                        name: "FK_Abono_Cliente_ClienteId",
-                        column: x => x.ClienteId,
-                        principalTable: "Cliente",
-                        principalColumn: "ClienteId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Pedido",
-                columns: table => new
-                {
-                    PedidoId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FechaPedido = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: false),
-                    MontoTotal = table.Column<double>(type: "float", nullable: false),
-                    MetodoPago = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Estado = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Delivery = table.Column<bool>(type: "bit", nullable: false),
-                    Eliminado = table.Column<bool>(type: "bit", nullable: false),
-                    ReferenciaSitio = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Pedido", x => x.PedidoId);
-                    table.ForeignKey(
-                        name: "FK_Pedido_Cliente_ClienteId",
-                        column: x => x.ClienteId,
-                        principalTable: "Cliente",
-                        principalColumn: "ClienteId",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "EntradaDetalles",
-                columns: table => new
-                {
-                    DetalleId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    EntradaId = table.Column<int>(type: "int", nullable: false),
-                    ProductoId = table.Column<int>(type: "int", nullable: false),
-                    Cantidad = table.Column<int>(type: "int", nullable: false),
-                    Eliminado = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_EntradaDetalles", x => x.DetalleId);
-                    table.ForeignKey(
-                        name: "FK_EntradaDetalles_Entrada_EntradaId",
-                        column: x => x.EntradaId,
-                        principalTable: "Entrada",
-                        principalColumn: "EntradaId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_EntradaDetalles_Producto_ProductoId",
-                        column: x => x.ProductoId,
-                        principalTable: "Producto",
-                        principalColumn: "ProductoId");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Factura",
                 columns: table => new
                 {
@@ -411,7 +306,6 @@ namespace Los4Carnales.Migrations
                     FechaEmision = table.Column<DateTime>(type: "datetime2", nullable: false),
                     Eliminado = table.Column<bool>(type: "bit", nullable: false),
                     PedidoId = table.Column<int>(type: "int", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: false),
                     MontoTotal = table.Column<double>(type: "float", nullable: false),
                     CodigoFactura = table.Column<string>(type: "nvarchar(max)", nullable: true)
                 },
@@ -419,17 +313,35 @@ namespace Los4Carnales.Migrations
                 {
                     table.PrimaryKey("PK_Factura", x => x.FacturaId);
                     table.ForeignKey(
-                        name: "FK_Factura_Cliente_ClienteId",
-                        column: x => x.ClienteId,
-                        principalTable: "Cliente",
-                        principalColumn: "ClienteId",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
                         name: "FK_Factura_Pedido_PedidoId",
                         column: x => x.PedidoId,
                         principalTable: "Pedido",
                         principalColumn: "PedidoId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Transferencia",
+                columns: table => new
+                {
+                    TransferenciaId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Fecha = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Origen = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Destino = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Monto = table.Column<double>(type: "float", nullable: false),
+                    Observaciones = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Eliminado = table.Column<bool>(type: "bit", nullable: false),
+                    PedidoId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Transferencia", x => x.TransferenciaId);
+                    table.ForeignKey(
+                        name: "FK_Transferencia_Pedido_PedidoId",
+                        column: x => x.PedidoId,
+                        principalTable: "Pedido",
+                        principalColumn: "PedidoId");
                 });
 
             migrationBuilder.CreateTable(
@@ -462,33 +374,26 @@ namespace Los4Carnales.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Transferencia",
+                name: "Entrada",
                 columns: table => new
                 {
-                    TransferenciaId = table.Column<int>(type: "int", nullable: false)
+                    EntradaId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Fecha = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    Origen = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Destino = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Monto = table.Column<double>(type: "float", nullable: false),
-                    Observaciones = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    FechaEntrada = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Concepto = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NumeroLote = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Eliminado = table.Column<bool>(type: "bit", nullable: false),
-                    ClienteId = table.Column<int>(type: "int", nullable: true),
-                    PedidoId = table.Column<int>(type: "int", nullable: true)
+                    ProveedorId = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Transferencia", x => x.TransferenciaId);
+                    table.PrimaryKey("PK_Entrada", x => x.EntradaId);
                     table.ForeignKey(
-                        name: "FK_Transferencia_Cliente_ClienteId",
-                        column: x => x.ClienteId,
-                        principalTable: "Cliente",
-                        principalColumn: "ClienteId");
-                    table.ForeignKey(
-                        name: "FK_Transferencia_Pedido_PedidoId",
-                        column: x => x.PedidoId,
-                        principalTable: "Pedido",
-                        principalColumn: "PedidoId");
+                        name: "FK_Entrada_Proveedores_ProveedorId",
+                        column: x => x.ProveedorId,
+                        principalTable: "Proveedores",
+                        principalColumn: "ProveedorId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(
@@ -511,10 +416,32 @@ namespace Los4Carnales.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Abono_ClienteId",
-                table: "Abono",
-                column: "ClienteId");
+            migrationBuilder.CreateTable(
+                name: "EntradaDetalles",
+                columns: table => new
+                {
+                    DetalleId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EntradaId = table.Column<int>(type: "int", nullable: false),
+                    ProductoId = table.Column<int>(type: "int", nullable: false),
+                    Cantidad = table.Column<int>(type: "int", nullable: false),
+                    Eliminado = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_EntradaDetalles", x => x.DetalleId);
+                    table.ForeignKey(
+                        name: "FK_EntradaDetalles_Entrada_EntradaId",
+                        column: x => x.EntradaId,
+                        principalTable: "Entrada",
+                        principalColumn: "EntradaId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_EntradaDetalles_Producto_ProductoId",
+                        column: x => x.ProductoId,
+                        principalTable: "Producto",
+                        principalColumn: "ProductoId");
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -561,11 +488,6 @@ namespace Los4Carnales.Migrations
                 filter: "[NormalizedUserName] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Cliente_UserId",
-                table: "Cliente",
-                column: "UserId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Entrada_ProveedorId",
                 table: "Entrada",
                 column: "ProveedorId");
@@ -581,19 +503,9 @@ namespace Los4Carnales.Migrations
                 column: "ProductoId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Factura_ClienteId",
-                table: "Factura",
-                column: "ClienteId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Factura_PedidoId",
                 table: "Factura",
                 column: "PedidoId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Pedido_ClienteId",
-                table: "Pedido",
-                column: "ClienteId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PedidoDetalle_PedidoId",
@@ -604,11 +516,6 @@ namespace Los4Carnales.Migrations
                 name: "IX_PedidoDetalle_ProductoId",
                 table: "PedidoDetalle",
                 column: "ProductoId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Transferencia_ClienteId",
-                table: "Transferencia",
-                column: "ClienteId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transferencia_PedidoId",
@@ -624,9 +531,6 @@ namespace Los4Carnales.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Abono");
-
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
 
@@ -673,6 +577,9 @@ namespace Los4Carnales.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
+                name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
                 name: "Entrada");
 
             migrationBuilder.DropTable(
@@ -686,12 +593,6 @@ namespace Los4Carnales.Migrations
 
             migrationBuilder.DropTable(
                 name: "Pedido");
-
-            migrationBuilder.DropTable(
-                name: "Cliente");
-
-            migrationBuilder.DropTable(
-                name: "AspNetUsers");
         }
     }
 }
