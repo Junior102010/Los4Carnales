@@ -78,11 +78,11 @@
 
                                 @* Existencia con color si está bajo *@
                                 <td class="text-center fw-bold @(producto.Existencia < 10 ? "text-danger" : "text-dark")">
-                                    @producto.Existencia @producto.UnidadMedida
+                                    @producto.Existencia @producto.UnidadMedida.Abreviatura
                                 </td>
 
                                 <td class="text-center">
-                                    <span class="badge bg-light text-secondary border">@producto.Categoria</span>
+                                    <span class="badge bg-light text-secondary border">@(producto.Categoria?.Nombre ?? "Sin Categoría")</span>
                                 </td>
 
                                 @* PRECIO NORMAL *@
@@ -139,7 +139,7 @@
             else if (Filtro == "Categoria")
             {
                 ListaProductos = await productosService.Listar(
-                    p => p.Categoria != null && p.Categoria.ToLower().Contains(ValorFiltro.ToLower()));
+                    p => p.Categoria != null && p.Categoria.Nombre.ToLower().Contains(ValorFiltro.ToLower()));
             }
             else if (Filtro == "Etiqueta")
             {

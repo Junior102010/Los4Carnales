@@ -24,11 +24,17 @@
         <NavLink class="nav-item-master" href="/Master/Usuarios">
             <i class="bi bi-people-fill"></i> Usuarios
         </NavLink>
+
         <NavLink class="nav-item-master" href="/Master/Facturacion">
             <i class="bi bi-cart-fill"></i> Facturacion
         </NavLink>
+
         <NavLink class="nav-item-master" href="/Master/Entradas">
             <i class="bi bi-box-arrow-in-down"></i> Entradas
+        </NavLink>
+
+        <NavLink class="nav-item-master" href="/Master/Logistica">
+            <i class="bi bi-bezier2"></i> Logistica
         </NavLink>
 
         <div style="margin-top: auto; margin-bottom: 30px;">
@@ -45,10 +51,10 @@
 </div>
 
 @code {
-   
+
     private string rutaLogoActual = "Imagenes/Logo1.png";
 
-   
+
     private void CambiarLogo()
     {
         if (rutaLogoActual == "Imagenes/Logo1.png")

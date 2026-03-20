@@ -29,7 +29,7 @@ builder.Services.AddAuthentication(options =>
     })
     .AddIdentityCookies();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString = builder.Configuration.GetConnectionString("ConStr") ?? throw new InvalidOperationException("Connection string 'ConStr' not found.");
 builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
@@ -54,7 +54,9 @@ builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<PageTitleService>();
 builder.Services.AddScoped<TranferenciaServices>();
 builder.Services.AddScoped<CarritoService>();
-builder.Services.AddScoped<ConfiguracionService>();
+builder.Services.AddScoped<SectorService>();
+builder.Services.AddScoped<UnidadMedidaService>();
+builder.Services.AddScoped<CategoriaService>();
 builder.Services.AddSweetAlert2();
 
 

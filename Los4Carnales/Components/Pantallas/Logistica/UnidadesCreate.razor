@@ -1,10 +1,13 @@
 ﻿@page "/Logistica/Unidades/Create"
 @page "/Logistica/Unidades/Edit/{UnidadId:int}"
 
-@inject ConfiguracionService configService
+@using Los4Carnales.Services
+@using Los4Carnales.Models
+@using Microsoft.AspNetCore.Authorization
+
+@inject UnidadMedidaService unidadService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
-@using Microsoft.AspNetCore.Authorization
 
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = "Administrador")]
@@ -21,27 +24,33 @@
             </h4>
         </div>
 
-        <EditForm Model="Unidad" OnValidSubmit="Guardar" FormName="GestionUnidades">
+        <EditForm Model="Unidad" OnValidSubmit="Guardar">
             <DataAnnotationsValidator />
 
             <div class="card-body">
 
-
                 <div class="mb-4">
                     <label class="form-label text-muted fw-bold small">DESCRIPCIÓN</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 text-primary"><i class="bi bi-tag"></i></span>
-                        <InputText class="form-control input-glass border-start-0" @bind-Value="Unidad.Descripcion" placeholder="Ej: Libra, Caja, Saco..." />
+                        <span class="input-group-text bg-white border-end-0 text-primary">
+                            <i class="bi bi-tag"></i>
+                        </span>
+                        <InputText class="form-control input-glass border-start-0"
+                                   @bind-Value="Unidad.Descripcion"
+                                   placeholder="Ej: Libra, Caja, Saco..." />
                     </div>
                     <ValidationMessage For="() => Unidad.Descripcion" />
                 </div>
 
-
                 <div class="mb-4">
                     <label class="form-label text-muted fw-bold small">ABREVIATURA</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 text-primary"><i class="bi bi-fonts"></i></span>
-                        <InputText class="form-control input-glass border-start-0" @bind-Value="Unidad.Abreviatura" placeholder="Ej: LB, CJ, UNID..." />
+                        <span class="input-group-text bg-white border-end-0 text-primary">
+                            <i class="bi bi-fonts"></i>
+                        </span>
+                        <InputText class="form-control input-glass border-start-0"
+                                   @bind-Value="Unidad.Abreviatura"
+                                   placeholder="Ej: LB, CJ, UNID..." />
                     </div>
                     <ValidationMessage For="() => Unidad.Abreviatura" />
                     <small class="text-muted">Se mostrará en la tienda y facturas.</small>
@@ -54,9 +63,23 @@
                 <a href="/Logistica/Unidades" class="btn btn-outline-secondary px-4">
                     <i class="bi bi-arrow-left"></i> Volver
                 </a>
-                <button type="submit" class="btn btn-gradiente px-5 shadow-sm">
-                    <i class="bi bi-check-circle-fill me-2"></i> Guardar
-                </button>
+
+                <div class="d-flex gap-2">
+
+                    @* Botón eliminar SOLO en modo edición *@
+                    @if (UnidadId > 0)
+                    {
+                        <button type="button" class="btn btn-outline-danger"
+                                @onclick="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    }
+
+                    <button type="submit" class="btn btn-gradiente px-5 shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i> Guardar
+                    </button>
+
+                </div>
             </div>
 
         </EditForm>
@@ -67,8 +90,7 @@
     [Parameter]
     public int UnidadId { get; set; }
 
-    [SupplyParameterFromForm]
-    public UnidadMedida Unidad { get; set; } = new UnidadMedida();
+    public UnidadMedida Unidad { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -76,14 +98,14 @@
 
         if (UnidadId > 0)
         {
-            var encontrada = await configService.BuscarUnidad(UnidadId);
+            var encontrada = await unidadService.Buscar(UnidadId);
+
             if (encontrada != null)
             {
                 Unidad = encontrada;
             }
             else
             {
-
                 navigationManager.NavigateTo("/Logistica/Unidades");
             }
         }
@@ -91,11 +113,20 @@
 
     public async Task Guardar()
     {
-        var guardado = await configService.GuardarUnidad(Unidad);
+        var guardado = await unidadService.Guardar(Unidad);
 
         if (guardado)
         {
+            navigationManager.NavigateTo("/Logistica/Unidades");
+        }
+    }
 
+    public async Task Eliminar()
+    {
+        var eliminado = await unidadService.Eliminar(UnidadId);
+
+        if (eliminado)
+        {
             navigationManager.NavigateTo("/Logistica/Unidades");
         }
     }

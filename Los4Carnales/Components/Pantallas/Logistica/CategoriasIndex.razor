@@ -1,27 +1,27 @@
-﻿@page "/Logistica/Unidades"
+﻿@page "/Logistica/Categorias"
 
 @using Microsoft.AspNetCore.Authorization
 @using Los4Carnales.Services
 @using Los4Carnales.Models
 
-@inject UnidadMedidaService unidadService
+@inject CategoriaService categoriaService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
 
 @attribute [Authorize(Roles = "Administrador")]
 
-<PageTitle>Unidades de Medida</PageTitle>
+<PageTitle>Categorías</PageTitle>
 
 <div class="container">
     <div class="card card-glass rounded-4 p-3 shadow-lg">
 
         <div class="card-header bg-transparent border-0 pb-0 d-flex justify-content-between align-items-center mb-3">
             <div>
-                <h4 class="fw-bold text-primary">
-                    <i class="bi bi-rulers"></i> Unidades de Medida
+                <h4 class="fw-bold text-warning">
+                    <i class="bi bi-tags-fill"></i> Categorías
                 </h4>
                 <p class="text-muted small mb-0">
-                    Configure las unidades utilizadas en los productos.
+                    Gestione las categorías de los productos.
                 </p>
             </div>
 
@@ -30,8 +30,8 @@
                     <i class="bi bi-arrow-left"></i> Volver
                 </a>
 
-                <a href="/Logistica/Unidades/Create" class="btn btn-gradiente">
-                    <i class="bi bi-plus-lg"></i> Nueva Unidad
+                <a href="/Logistica/Categorias/Create" class="btn btn-gradiente">
+                    <i class="bi bi-plus-lg"></i> Nueva Categoría
                 </a>
             </div>
         </div>
@@ -41,13 +41,13 @@
             @if (Cargando)
             {
                 <div class="text-center py-5">
-                    <div class="spinner-border text-primary"></div>
+                    <div class="spinner-border text-warning"></div>
                 </div>
             }
-            else if (!ListaUnidades.Any())
+            else if (!ListaCategorias.Any())
             {
                 <div class="alert alert-info text-center">
-                    No hay unidades registradas.
+                    No hay categorías registradas.
                 </div>
             }
             else
@@ -57,31 +57,28 @@
 
                         <thead class="bg-light text-secondary">
                             <tr>
-                                <th class="ps-4">Descripción</th>
-                                <th>Abreviatura</th>
+                                <th class="ps-4">Nombre</th>
                                 <th class="text-center">Opciones</th>
                             </tr>
                         </thead>
 
                         <tbody>
-                            @foreach (var item in ListaUnidades)
+                            @foreach (var item in ListaCategorias)
                             {
                                 <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
 
                                     <td class="ps-4 fw-bold">
-                                        @item.Descripcion
-                                    </td>
+                                        @item.Nombre
 
-                                    <td>
-                                        <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25">
-                                            @item.Abreviatura
-                                        </span>
+                                        @if (item.Eliminado)
+                                        {
+                                            <span class="badge bg-danger ms-2">Eliminado</span>
+                                        }
                                     </td>
 
                                     <td class="text-center">
-                                        <a href="/Logistica/Unidades/Edit/@item.UnidadId"
-                                           class="btn btn-sm btn-outline-primary border-0"
-                                           title="Editar">
+                                        <a href="/Logistica/Categorias/Edit/@item.CategoriaId"
+                                           class="btn btn-sm btn-outline-primary border-0">
                                             <i class="bi bi-pencil-square fs-5"></i>
                                         </a>
                                     </td>
@@ -96,19 +93,19 @@
         </div>
 
         <div class="card-footer bg-transparent border-0 text-muted small ps-4">
-            Total Registros: @ListaUnidades.Count
+            Total Registros: @ListaCategorias.Count
         </div>
 
     </div>
 </div>
 
 @code {
-    public List<UnidadMedida> ListaUnidades { get; set; } = new();
+    public List<Categorias> ListaCategorias { get; set; } = new();
     public bool Cargando { get; set; } = true;
 
     protected override async Task OnInitializedAsync()
     {
-        PageTitleService.SetTitle("Unidades");
+        PageTitleService.SetTitle("Categorías");
         await Cargar();
     }
 
@@ -116,8 +113,8 @@
     {
         Cargando = true;
 
-        // 🔥 SIN filtro Eliminado (como tú definiste)
-        ListaUnidades = await unidadService.Listar(_ => true);
+        // 🔥 SIN filtro Eliminado
+        ListaCategorias = await categoriaService.Listar(_ => true);
 
         Cargando = false;
     }
