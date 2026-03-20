@@ -1,0 +1,181 @@
+﻿@page "/Resumen"
+@using Microsoft.AspNetCore.Authorization
+
+@inject PedidosServices pedidosService
+@inject ProductosServices productosService
+@inject PageTitleService PageTitleService
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Resumen General</PageTitle>
+
+
+<div class="container mt-4">
+
+
+    <div class="row">
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-glass card-dashboard border-left-success h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs text-success">Ingresos (Entregados)</div>
+                            <div class="h5 mb-0 fw-bold text-secondary">@IngresosTotales.ToString("C2")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-cash-coin icon-dashboard"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-glass card-dashboard border-left-warning h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs text-warning">Pedidos Pendientes</div>
+                            <div class="h5 mb-0 fw-bold text-secondary">@PedidosPendientes</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-clock-history icon-dashboard"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-glass card-dashboard border-left-danger h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs text-danger">Bajo Stock (Crítico)</div>
+                            <div class="h5 mb-0 fw-bold text-secondary">@ListaBajoStock.Count()</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-exclamation-triangle-fill icon-dashboard"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card card-glass card-dashboard border-left-primary h-100 py-2">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col me-2">
+                            <div class="text-xs text-primary">Capital en Mercancía</div>
+                            <div class="h5 mb-0 fw-bold text-secondary">@CapitalInventario.ToString("C2")</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-box-seam icon-dashboard"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+
+        <div class="col-lg-6 mb-4">
+            <div class="card card-glass shadow mb-4">
+                <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3">
+                    <h6 class="m-0 fw-bold text-danger">
+                        <i class="bi bi-graph-down-arrow"></i> Productos por Agotarse
+                    </h6>
+                </div>
+                <div class="card-body">
+                    @if (ListaBajoStock.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-borderless align-middle mb-0">
+                                <thead class="text-muted small">
+                                    <tr>
+                                        <th>Producto</th>
+                                        <th class="text-center">Quedan</th>
+                                        <th class="text-center">Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in ListaBajoStock.Take(5))
+                                    {
+                                        <tr class="border-bottom border-secondary border-opacity-10">
+                                            <td class="fw-bold text-secondary">@item.NombreProducto</td>
+                                            <td class="text-center text-danger fw-bold">@item.Existencia</td>
+                                            <td class="text-center">
+                                                <a href="/Entrada/Create" class="btn btn-sm btn-outline-success bi bi-cart-plus border-0"></a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (ListaBajoStock.Count > 5)
+                        {
+                            <div class="text-center mt-2">
+                                <small class="text-muted">y @(ListaBajoStock.Count - 5) más...</small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4 text-success">
+                            <i class="bi bi-check-circle fs-1"></i>
+                            <p class="mb-0">Inventario Saludable</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card card-glass shadow mb-4 h-100">
+                <div class="card-header bg-transparent border-bottom border-secondary border-opacity-10 py-3">
+                    <h6 class="m-0 fw-bold" style="color: #3D5D35;">Administración</h6>
+                </div>
+                <div class="card-body text-center d-flex flex-column justify-content-center align-items-center">
+                    <img src="/imagenes/Logo.png" class="img-fluid mb-3" style="max-height: 150px; opacity: 0.8;" alt="Logo" />
+                    <h5 class="text-muted">Sistema de Gestión de Pollera</h5>
+                    <p class="small text-muted">Controla inventario, pedidos y clientes desde un solo lugar.</p>
+
+                    <a href="/Pedido/Create" class="btn btn-gradiente px-4 mt-2">
+                        <i class="bi bi-plus-circle"></i> Venta Rápida
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@code {
+    public double IngresosTotales { get; set; }
+    public int PedidosPendientes { get; set; }
+    public double CapitalInventario { get; set; }
+    public List<Producto> ListaBajoStock { get; set; } = new List<Producto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        PageTitleService.SetTitle("Resumen");
+        var todosPedidos = await pedidosService.Listar(p => p.Estado == "Entregado");
+        IngresosTotales = todosPedidos.Sum(p => p.MontoTotal);
+
+
+        var pedidosPendientes = await pedidosService.Listar(p => p.Estado == "Pendiente");
+        PedidosPendientes = pedidosPendientes.Count();
+
+
+        ListaBajoStock = await productosService.Listar(p => p.Existencia <= 15);
+
+
+        var todosProductos = await productosService.Listar(p => p.ProductoId > 0);
+        CapitalInventario = todosProductos.Sum(p => p.Costo * p.Existencia);
+    }
+}

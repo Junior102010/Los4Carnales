@@ -25,11 +25,6 @@ public class Transferencia
     [Required]
     public string Observaciones { get; set; } = string.Empty;
     public bool Eliminado { get; set; } = false;
-    public int? ClienteId { get; set; }
-
-    [ForeignKey("ClienteId")]
-    public Cliente? Cliente { get; set; }
-
     public int? PedidoId { get; set; }
 
     [ForeignKey("PedidoId")]

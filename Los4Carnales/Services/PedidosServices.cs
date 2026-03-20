@@ -17,7 +17,6 @@ public class PedidosServices(IDbContextFactory<ApplicationDbContext> DbFactory)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.Pedido
-            .Include(p => p.Cliente)
             .Include(p => p.Detalles)
             .ThenInclude(d => d.Producto)
             .FirstOrDefaultAsync(e => e.PedidoId == id);
@@ -27,7 +26,6 @@ public class PedidosServices(IDbContextFactory<ApplicationDbContext> DbFactory)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.Pedido
-            .Include(p => p.Cliente)
             .Include(p => p.Detalles)
             .Where(criterio)
             .AsNoTracking()
@@ -61,7 +59,6 @@ public class PedidosServices(IDbContextFactory<ApplicationDbContext> DbFactory)
         await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.Pedido
             .IgnoreQueryFilters()
-            .Include(p => p.Cliente)
             .Where(p => p.Eliminado)
             .AsNoTracking()
             .ToListAsync();
@@ -119,7 +116,6 @@ public class PedidosServices(IDbContextFactory<ApplicationDbContext> DbFactory)
         var nuevaFactura = new Factura
         {
             PedidoId = pedido.PedidoId,
-            ClienteId = pedido.ClienteId,
             FechaEmision = DateTime.Now,
             MontoTotal = pedido.MontoTotal,
             CodigoFactura = $"FAC-{pedido.PedidoId:D6}"

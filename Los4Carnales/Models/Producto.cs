@@ -7,10 +7,10 @@ public class Producto
     [Key]
     public int ProductoId { get; set; }
     [Required(ErrorMessage = "La etiqueta del producto es obligatorio")]
-    public string Etiqueta { get; set; }
+    public string? Etiqueta { get; set; }
 
     [Required(ErrorMessage = "El nombre del producto es obligatorio")]
-    public string NombreProducto { get; set; }
+    public string? NombreProducto { get; set; }
 
     [Required(ErrorMessage = "El costo es obligatorio")]
     public double Costo { get; set; }
@@ -25,10 +25,10 @@ public class Producto
     public double PrecioEmpresa { get; set; } 
 
     [Required(ErrorMessage = "Campo obligatorio")]
-    public string UnidadMedida { get; set; }
+    public string? UnidadMedida { get; set; }
 
     [Required(ErrorMessage = "Campo obligatorio")]
-    public string Categoria { get; set; }
+    public string? Categoria { get; set; }
 
     [Required(ErrorMessage = "Campo obligatorio")]
     public int Existencia { get; set; }

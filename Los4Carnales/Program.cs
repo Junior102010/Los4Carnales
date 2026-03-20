@@ -51,13 +51,12 @@ builder.Services.AddScoped<ProductosServices>();
 builder.Services.AddScoped<EntradasServices>();
 builder.Services.AddScoped<PedidosServices>();
 builder.Services.AddScoped<UsuarioServices>();
-builder.Services.AddScoped<ClientesServices>();
 builder.Services.AddScoped<PageTitleService>();
 builder.Services.AddScoped<TranferenciaServices>();
 builder.Services.AddScoped<CarritoService>();
-builder.Services.AddScoped<AbonosService>();
 builder.Services.AddScoped<ConfiguracionService>();
 builder.Services.AddSweetAlert2();
+
 
 var app = builder.Build();
 
@@ -92,7 +91,7 @@ app.UseHttpsRedirection();
 app.UseAntiforgery();
 
 app.MapStaticAssets();
-app.MapRazorComponents<App>()
+app.MapRazorComponents<Los4Carnales.Components.App>()
     .AddInteractiveServerRenderMode();
 
 // Add additional endpoints required by the Identity /Account Razor components.
