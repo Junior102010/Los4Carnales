@@ -14,7 +14,9 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<Entrada> Entrada { get; set; }
 
+    public DbSet<Cliente> Cliente { get; set; }
 
+    public DbSet<Abono> Abono { get; set; }
     public DbSet<TransferenciaImagen> TransferenciaImagenes { get; set; }
     public DbSet<Categorias> Categoria { get; set; }
 
