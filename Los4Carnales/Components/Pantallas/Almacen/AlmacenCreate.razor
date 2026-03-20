@@ -34,23 +34,29 @@
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Categoría</label>
                         @* Agregamos el evento :after para generar la etiqueta al seleccionar *@
-                        <InputSelect class="form-select input-glass"
-                                     @bind-Value="Producto.Categoria"
-                                     @bind-Value:after="GenerarEtiqueta">
-                            <option value="" selected disabled>Seleccione una categoría</option>
-                            <option value="Carnes">Carnes</option>
-                            <option value="Granos">Granos</option>
-                            <option value="Verduras">Verduras</option>
-                            <option value="Vegetales">Vegetales</option>
-                            <option value="Ensaladas">Ensaladas</option>
-                            <option value="Frutas">Frutas</option>
-                            <option value="Sazones">Sazones</option>
-                            <option value="Víveres">Víveres</option>
-                            <option value="Embutidos">Embutidos</option>
-                            <option value="Lácteos">Lácteos</option>
-                            <option value="Otros">Otros</option>
-                        </InputSelect>
-                        <ValidationMessage For="(() => Producto.Categoria)" />
+                        <div class="input-group">
+                            <InputSelect class="form-select input-glass"
+                                         @bind-Value="Producto.Categoria"
+                                         @bind-Value:after="GenerarEtiqueta">
+                                <option value="" selected disabled>Seleccione una categoría</option>
+                                <option value="Carnes">Carnes</option>
+                                <option value="Granos">Granos</option>
+                                <option value="Verduras">Verduras</option>
+                                <option value="Vegetales">Vegetales</option>
+                                <option value="Ensaladas">Ensaladas</option>
+                                <option value="Frutas">Frutas</option>
+                                <option value="Sazones">Sazones</option>
+                                <option value="Víveres">Víveres</option>
+                                <option value="Embutidos">Embutidos</option>
+                                <option value="Lácteos">Lácteos</option>
+                                <option value="Otros">Otros</option>
+                            </InputSelect>
+                            <ValidationMessage For="(() => Producto.Categoria)" />
+                            <a href="/Unidades/Index" class="btn btn-outline-secondary" title="Gestionar Unidades">
+                                <i class="bi bi-gear"></i>
+                            </a>
+                        </div>
+            
                     </div>
 
                     <div class="col-md-4">
