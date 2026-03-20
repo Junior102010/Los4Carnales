@@ -65,7 +65,7 @@
                                 <option value="0" selected disabled>Seleccione un producto</option>
                                 @foreach (var prod in ListaProductos)
                                 {
-                                    <option value="@prod.ProductoId">@prod.NombreProducto (@prod.UnidadMedida)</option>
+                                    <option value="@prod.ProductoId">@prod.NombreProducto (@prod.UnidadMedida.Abreviatura)</option>
                                 }
                             </InputSelect>
                         </div>

@@ -2,8 +2,10 @@
 @page "/Logistica/Sectores/Edit/{SectorId:int}"
 
 @using Microsoft.AspNetCore.Authorization
+@using Los4Carnales.Services
+@using Los4Carnales.Models
 
-@inject ConfiguracionService configService
+@inject SectorService sectorService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
 
@@ -22,7 +24,7 @@
             </h4>
         </div>
 
-        <EditForm Model="Sector" OnValidSubmit="Guardar" FormName="GestionSectores">
+        <EditForm Model="Sector" OnValidSubmit="Guardar">
             <DataAnnotationsValidator />
 
             <div class="card-body">
@@ -30,9 +32,12 @@
                 <div class="mb-4">
                     <label class="form-label text-muted fw-bold small">MUNICIPIO</label>
                     <div class="input-group">
-                        <span class="input-group-text bg-white border-end-0 text-success"><i class="bi bi-geo-alt"></i></span>
-                        <InputSelect class="form-select input-glass border-start-0" @bind-Value="Sector.Municipio">
-                            <option value="" selected disabled>Seleccione Municipio...</option>
+                        <span class="input-group-text bg-white border-end-0 text-success">
+                            <i class="bi bi-geo-alt"></i>
+                        </span>
+                        <InputSelect class="form-select input-glass border-start-0"
+                                     @bind-Value="Sector.Municipio">
+                            <option value="" disabled>Seleccione Municipio...</option>
                             <option value="El Factor">El Factor</option>
                             <option value="Nagua">Nagua</option>
                             <option value="Cabrera">Cabrera</option>
@@ -42,12 +47,14 @@
                     <ValidationMessage For="() => Sector.Municipio" />
                 </div>
 
-
                 <div class="mb-4">
                     <label class="form-label text-muted fw-bold small">NOMBRE DEL SECTOR / BARRIO</label>
-                    <InputText class="form-control input-glass" @bind-Value="Sector.Nombre" placeholder="Ej: Pueblo Nuevo, El Barro..." />
+                    <InputText class="form-control input-glass"
+                               @bind-Value="Sector.Nombre"
+                               placeholder="Ej: Pueblo Nuevo, El Barro..." />
                     <ValidationMessage For="() => Sector.Nombre" />
                 </div>
+
             </div>
 
             <div class="card-footer bg-transparent border-0 d-flex justify-content-between pb-3 px-4">
@@ -55,9 +62,23 @@
                 <a href="/Logistica/Sectores" class="btn btn-outline-secondary px-4">
                     <i class="bi bi-arrow-left"></i> Volver
                 </a>
-                <button type="submit" class="btn btn-gradiente px-5 shadow-sm">
-                    <i class="bi bi-check-circle-fill me-2"></i> Guardar
-                </button>
+
+                <div class="d-flex gap-2">
+
+                    @* Botón eliminar SOLO en edición *@
+                    @if (SectorId > 0)
+                    {
+                        <button type="button" class="btn btn-outline-danger"
+                                @onclick="Eliminar">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    }
+
+                    <button type="submit" class="btn btn-gradiente px-5 shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i> Guardar
+                    </button>
+
+                </div>
             </div>
 
         </EditForm>
@@ -68,8 +89,7 @@
     [Parameter]
     public int SectorId { get; set; }
 
-    [SupplyParameterFromForm]
-    public Sector Sector { get; set; } = new Sector();
+    public Sector Sector { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -77,14 +97,14 @@
 
         if (SectorId > 0)
         {
-            var encontrado = await configService.BuscarSector(SectorId);
+            var encontrado = await sectorService.Buscar(SectorId);
+
             if (encontrado != null)
             {
                 Sector = encontrado;
             }
             else
             {
-
                 navigationManager.NavigateTo("/Logistica/Sectores");
             }
         }
@@ -92,10 +112,20 @@
 
     public async Task Guardar()
     {
-        var guardado = await configService.GuardarSector(Sector);
+        var guardado = await sectorService.Guardar(Sector);
+
         if (guardado)
         {
+            navigationManager.NavigateTo("/Logistica/Sectores");
+        }
+    }
 
+    public async Task Eliminar()
+    {
+        var eliminado = await sectorService.Eliminar(SectorId);
+
+        if (eliminado)
+        {
             navigationManager.NavigateTo("/Logistica/Sectores");
         }
     }
