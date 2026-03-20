@@ -19,7 +19,28 @@ public class ConfiguracionService(IDbContextFactory<ApplicationDbContext> DbFact
     public async Task<List<UnidadMedida>> ListarUnidades()
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.UnidadMedida.AsNoTracking().ToListAsync();
+        // Solo lista las que no están eliminadas
+        return await contexto.UnidadMedida
+            .Where(u => !u.Eliminado)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<UnidadMedida?> BuscarUnidad(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.UnidadMedida.FirstOrDefaultAsync(u => u.UnidadId == id && !u.Eliminado);
+    }
+
+    public async Task<bool> EliminarUnidad(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var unidad = await contexto.UnidadMedida.FindAsync(id);
+        if (unidad == null) return false;
+
+        unidad.Eliminado = true; // Eliminado lógico
+        contexto.Update(unidad);
+        return await contexto.SaveChangesAsync() > 0;
     }
 
     // --- SECTORES ---
@@ -34,40 +55,88 @@ public class ConfiguracionService(IDbContextFactory<ApplicationDbContext> DbFact
     public async Task<List<Sector>> ListarSectores()
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.Sector.AsNoTracking().ToListAsync();
+        return await contexto.Sector
+            .Where(s => !s.Eliminado)
+            .AsNoTracking()
+            .ToListAsync();
     }
+
     public async Task<Sector?> BuscarSector(int id)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.Sector.FindAsync(id);
+        return await contexto.Sector.FirstOrDefaultAsync(s => s.SectorId == id && !s.Eliminado);
     }
 
     public async Task<bool> EliminarSector(int id)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
         var sector = await contexto.Sector.FindAsync(id);
-        if (sector != null)
-        {
-            contexto.Sector.Remove(sector);
-            return await contexto.SaveChangesAsync() > 0;
-        }
-        return false;
-    }
-    public async Task<UnidadMedida?> BuscarUnidad(int id)
-    {
-        await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.UnidadMedida.FindAsync(id);
+        if (sector == null) return false;
+
+        sector.Eliminado = true; // Eliminado lógico
+        contexto.Update(sector);
+        return await contexto.SaveChangesAsync() > 0;
     }
 
-    public async Task<bool> EliminarUnidad(int id)
+    // --- LÓGICA DE PAPELERA (PARA AMBOS) ---
+
+    public async Task<List<UnidadMedida>> ListarUnidadesPapelera()
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        var unidad = await contexto.UnidadMedida.FindAsync(id);
-        if (unidad != null)
-        {
-            contexto.UnidadMedida.Remove(unidad);
-            return await contexto.SaveChangesAsync() > 0;
-        }
-        return false;
+        return await contexto.UnidadMedida
+            .IgnoreQueryFilters()
+            .Where(u => u.Eliminado)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<List<Sector>> ListarSectoresPapelera()
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Sector
+            .IgnoreQueryFilters()
+            .Where(s => s.Eliminado)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<bool> RestaurarUnidad(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var unidad = await contexto.UnidadMedida.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(u => u.UnidadId == id);
+
+        if (unidad == null) return false;
+        unidad.Eliminado = false;
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> RestaurarSector(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var sector = await contexto.Sector.IgnoreQueryFilters()
+            .FirstOrDefaultAsync(s => s.SectorId == id);
+
+        if (sector == null) return false;
+        sector.Eliminado = false;
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminarPermanenteUnidad(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.UnidadMedida
+            .IgnoreQueryFilters()
+            .Where(u => u.UnidadId == id)
+            .ExecuteDeleteAsync() > 0;
+    }
+
+    public async Task<bool> EliminarPermanenteSector(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Sector
+            .IgnoreQueryFilters()
+            .Where(s => s.SectorId == id)
+            .ExecuteDeleteAsync() > 0;
     }
 }
