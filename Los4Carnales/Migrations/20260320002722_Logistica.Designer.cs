@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Los4Carnales.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260220024329_Inicial")]
-    partial class Inicial
+    [Migration("20260320002722_Logistica")]
+    partial class Logistica
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -190,7 +190,6 @@ namespace Los4Carnales.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserId")
-                        .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("ViviendaCliente")
@@ -765,8 +764,7 @@ namespace Los4Carnales.Migrations
                     b.HasOne("Los4Carnales.Data.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("User");
                 });

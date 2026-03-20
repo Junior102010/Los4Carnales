@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Los4Carnales.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicial : Migration
+    public partial class Logistica : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -283,7 +283,7 @@ namespace Los4Carnales.Migrations
                 {
                     ClienteId = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     NombreCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ApellidoCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     TelefonoCliente = table.Column<string>(type: "nvarchar(max)", nullable: false),
