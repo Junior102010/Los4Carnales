@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Los4Carnales.Migrations
 {
     /// <inheritdoc />
-    public partial class Inicial4 : Migration
+    public partial class Logistica : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -85,27 +85,6 @@ namespace Los4Carnales.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Pedido", x => x.PedidoId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Producto",
-                columns: table => new
-                {
-                    ProductoId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Etiqueta = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    NombreProducto = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Costo = table.Column<double>(type: "float", nullable: false),
-                    Precio = table.Column<double>(type: "float", nullable: false),
-                    PrecioEmpresa = table.Column<double>(type: "float", nullable: false),
-                    UnidadMedida = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Categoria = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Existencia = table.Column<int>(type: "int", nullable: false),
-                    Eliminado = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Producto", x => x.ProductoId);
                 });
 
             migrationBuilder.CreateTable(
@@ -345,35 +324,6 @@ namespace Los4Carnales.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "PedidoDetalle",
-                columns: table => new
-                {
-                    DetalleId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    PedidoId = table.Column<int>(type: "int", nullable: false),
-                    ProductoId = table.Column<int>(type: "int", nullable: false),
-                    Cantidad = table.Column<double>(type: "float", nullable: false),
-                    PrecioUnitario = table.Column<double>(type: "float", nullable: false),
-                    Importe = table.Column<double>(type: "float", nullable: false),
-                    Eliminado = table.Column<bool>(type: "bit", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_PedidoDetalle", x => x.DetalleId);
-                    table.ForeignKey(
-                        name: "FK_PedidoDetalle_Pedido_PedidoId",
-                        column: x => x.PedidoId,
-                        principalTable: "Pedido",
-                        principalColumn: "PedidoId",
-                        onDelete: ReferentialAction.Cascade);
-                    table.ForeignKey(
-                        name: "FK_PedidoDetalle_Producto_ProductoId",
-                        column: x => x.ProductoId,
-                        principalTable: "Producto",
-                        principalColumn: "ProductoId");
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Entrada",
                 columns: table => new
                 {
@@ -393,6 +343,39 @@ namespace Los4Carnales.Migrations
                         column: x => x.ProveedorId,
                         principalTable: "Proveedores",
                         principalColumn: "ProveedorId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Producto",
+                columns: table => new
+                {
+                    ProductoId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CategoriaId = table.Column<int>(type: "int", nullable: false),
+                    UnidadMedidaId = table.Column<int>(type: "int", nullable: false),
+                    Etiqueta = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    NombreProducto = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Costo = table.Column<double>(type: "float", nullable: false),
+                    Precio = table.Column<double>(type: "float", nullable: false),
+                    PrecioEmpresa = table.Column<double>(type: "float", nullable: false),
+                    Existencia = table.Column<int>(type: "int", nullable: false),
+                    Eliminado = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Producto", x => x.ProductoId);
+                    table.ForeignKey(
+                        name: "FK_Producto_Categoria_CategoriaId",
+                        column: x => x.CategoriaId,
+                        principalTable: "Categoria",
+                        principalColumn: "CategoriaId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Producto_UnidadMedida_UnidadMedidaId",
+                        column: x => x.UnidadMedidaId,
+                        principalTable: "UnidadMedida",
+                        principalColumn: "UnidadId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -438,6 +421,35 @@ namespace Los4Carnales.Migrations
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
                         name: "FK_EntradaDetalles_Producto_ProductoId",
+                        column: x => x.ProductoId,
+                        principalTable: "Producto",
+                        principalColumn: "ProductoId");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PedidoDetalle",
+                columns: table => new
+                {
+                    DetalleId = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    PedidoId = table.Column<int>(type: "int", nullable: false),
+                    ProductoId = table.Column<int>(type: "int", nullable: false),
+                    Cantidad = table.Column<double>(type: "float", nullable: false),
+                    PrecioUnitario = table.Column<double>(type: "float", nullable: false),
+                    Importe = table.Column<double>(type: "float", nullable: false),
+                    Eliminado = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PedidoDetalle", x => x.DetalleId);
+                    table.ForeignKey(
+                        name: "FK_PedidoDetalle_Pedido_PedidoId",
+                        column: x => x.PedidoId,
+                        principalTable: "Pedido",
+                        principalColumn: "PedidoId",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_PedidoDetalle_Producto_ProductoId",
                         column: x => x.ProductoId,
                         principalTable: "Producto",
                         principalColumn: "ProductoId");
@@ -518,6 +530,16 @@ namespace Los4Carnales.Migrations
                 column: "ProductoId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Producto_CategoriaId",
+                table: "Producto",
+                column: "CategoriaId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Producto_UnidadMedidaId",
+                table: "Producto",
+                column: "UnidadMedidaId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Transferencia_PedidoId",
                 table: "Transferencia",
                 column: "PedidoId");
@@ -550,9 +572,6 @@ namespace Los4Carnales.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
-                name: "Categoria");
-
-            migrationBuilder.DropTable(
                 name: "EntradaDetalles");
 
             migrationBuilder.DropTable(
@@ -566,9 +585,6 @@ namespace Los4Carnales.Migrations
 
             migrationBuilder.DropTable(
                 name: "TransferenciaImagenes");
-
-            migrationBuilder.DropTable(
-                name: "UnidadMedida");
 
             migrationBuilder.DropTable(
                 name: "Usuario");
@@ -590,6 +606,12 @@ namespace Los4Carnales.Migrations
 
             migrationBuilder.DropTable(
                 name: "Proveedores");
+
+            migrationBuilder.DropTable(
+                name: "Categoria");
+
+            migrationBuilder.DropTable(
+                name: "UnidadMedida");
 
             migrationBuilder.DropTable(
                 name: "Pedido");
