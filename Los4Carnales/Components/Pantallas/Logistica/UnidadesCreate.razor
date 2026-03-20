@@ -4,10 +4,15 @@
 @using Los4Carnales.Services
 @using Los4Carnales.Models
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Los4Carnales.Data
 
 @inject UnidadMedidaService unidadService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
+@inject SweetAlertService Swal
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
 
 @rendermode InteractiveServer
 @attribute [Authorize(Roles = "Administrador")]
@@ -113,21 +118,109 @@
 
     public async Task Guardar()
     {
-        var guardado = await unidadService.Guardar(Unidad);
-
-        if (guardado)
+        try
         {
-            navigationManager.NavigateTo("/Logistica/Unidades");
+            var guardado = await unidadService.Guardar(Unidad);
+
+            if (guardado)
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "¡Guardado!",
+                    Text = "La unidad se guardó exitosamente.",
+                    Icon = SweetAlertIcon.Success
+                });
+
+                navigationManager.NavigateTo("/Logistica/Unidades");
+            }
+        }
+        catch (Exception ex)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Error",
+                Text = "Ocurrió un problema al guardar.",
+                Icon = SweetAlertIcon.Error
+            });
+            Console.WriteLine(ex.Message);
         }
     }
 
     public async Task Eliminar()
     {
-        var eliminado = await unidadService.Eliminar(UnidadId);
-
-        if (eliminado)
+        // 1. Alerta de Advertencia Inicial
+        var confirmacion = await Swal.FireAsync(new SweetAlertOptions
         {
-            navigationManager.NavigateTo("/Logistica/Unidades");
+            Title = "¿Estás seguro?",
+            Text = $"¿Deseas eliminar la unidad {Unidad.Descripcion}?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "<i class=\"bi bi-trash-fill me-1\"></i> Eliminar",
+            CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(confirmacion.Value))
+        {
+            // 2. Pedimos la contraseña
+            var passwordResult = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmar identidad",
+                Text = "Ingresa tu contraseña de administrador para autorizar:",
+                Input = SweetAlertInputType.Password,
+                InputPlaceholder = "Tu contraseña",
+                ShowCancelButton = true,
+                ConfirmButtonText = "<i class=\"bi bi-shield-lock-fill me-1\"></i> Verificar",
+                CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+            });
+
+            if (!string.IsNullOrEmpty(passwordResult.Value))
+            {
+                string passwordIngresado = passwordResult.Value;
+
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var user = await UserManager.GetUserAsync(authState.User);
+
+                bool passwordCorrecto = false;
+                if (user != null)
+                {
+                    // Validación real con Identity
+                    passwordCorrecto = await UserManager.CheckPasswordAsync(user, passwordIngresado);
+                }
+
+                if (passwordCorrecto)
+                {
+                    var ok = await unidadService.Eliminar(UnidadId);
+
+                    if (ok)
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "¡Eliminado!",
+                            Text = "La unidad se borró correctamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+                        navigationManager.NavigateTo("/Logistica/Unidades");
+                    }
+                    else
+                    {
+                        await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Error",
+                            Text = "No se pudo eliminar de la base de datos.",
+                            Icon = SweetAlertIcon.Error
+                        });
+                    }
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Acceso Denegado",
+                        Text = "La contraseña es incorrecta. Operación cancelada.",
+                        Icon = SweetAlertIcon.Error
+                    });
+                }
+            }
         }
     }
 }
