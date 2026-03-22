@@ -115,6 +115,11 @@
                             <label class="form-label small fw-bold text-success">Cantidad Neta</label>
                             <InputNumber class="form-control input-glass fw-bold" @bind-Value="Detalle.Cantidad" disabled="@(TipoEntrada != "Directa")" />
                         </div>
+
+                        <div class="col-md-3">
+                            <label class="form-label text-muted small fw-bold mb-1">Fecha Vencimiento</label>
+                            <InputDate class="form-control input-glass" @bind-Value="Detalle.FechaVencimiento" />
+                        </div>
                     </div>
 
                     <div class="row mt-3">
@@ -193,6 +198,7 @@
         ListaProveedores = await entradasService.ListarProveedores();
 
         Entrada.FechaEntrada = DateTime.Now;
+        Detalle.FechaVencimiento = DateTime.Now.AddDays(5);
 
         // Generamos el Lote Automático
         GenerarLote();
@@ -211,6 +217,7 @@
 
         if (Detalle.ProductoId <= 0) { Mensaje = "Debe seleccionar un producto."; return; }
         if (Detalle.Cantidad <= 0) { Mensaje = "La cantidad debe ser mayor a 0."; return; }
+       // if (Detalle.FechaVencimiento <= Entrada.FechaEntrada) { Mensaje = "Fecha de Vencimiento menor que fecha de Entrada. Por favor, Revise."; return;  }
 
         var existente = Entrada.EntradaDetalles.FirstOrDefault(d => d.ProductoId == Detalle.ProductoId);
         if (existente != null)
@@ -222,10 +229,12 @@
             Entrada.EntradaDetalles.Add(new EntradaDetalle
             {
                 ProductoId = Detalle.ProductoId,
-                Cantidad = Detalle.Cantidad
+                Cantidad = Detalle.Cantidad,
+                FechaVencimiento = Detalle.FechaVencimiento,
             });
         }
         Detalle = new EntradaDetalle();
+        Detalle.FechaVencimiento = DateTime.Now.AddDays(5);
         LimpiarAuxiliares();
     }
 

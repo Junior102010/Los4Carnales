@@ -71,6 +71,7 @@
                                 <th class="text-center">Categoría</th>
                                 <th class="text-center">Unidad</th>
                                 <th class="text-center">Cantidad Recibida</th>
+                                <th class="text-center">Fecha Vencimiento</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -78,9 +79,13 @@
                             {
                                 <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
                                     <td class="ps-3">@(item.Producto?.NombreProducto ?? "Producto Eliminado")</td>
-                                    <td class="text-center small text-muted">@(item.Producto?.Categoria.Nombre ?? "-")</td>
-                                    <td class="text-center small text-muted">@(item.Producto?.UnidadMedida.Descripcion ?? "-")</td>
-                                    <td class="text-center fw-bold fs-5" style="color: #3D5D35;">@item.Cantidad</td>
+                                    <td class="text-center small text-muted">@(item?.Producto?.Categoria?.Nombre )</td>
+                                    <td class="text-center small text-muted">@(item?.Producto?.UnidadMedida?.Descripcion ?? "Sin Categoría")</td>
+                                    <td class="text-center fw-bold fs-5" style="color: #3D5D35;">@item?.Cantidad</td>
+                                    <td class="text-center fw-bold fs-5"
+                                        style="color: @(item?.FechaVencimiento <= DateTime.Today ? "red" : "#3D5D35");">
+                                        @item?.FechaVencimiento.ToString("dd/MM/yyyy")
+                                    </td>
                                 </tr>
                             }
                             @if (!Entrada.EntradaDetalles.Any())

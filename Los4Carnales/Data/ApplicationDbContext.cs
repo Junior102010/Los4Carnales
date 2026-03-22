@@ -37,6 +37,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Entity<UnidadMedida>().HasQueryFilter(u => !u.Eliminado);
         modelBuilder.Entity<Sector>().HasQueryFilter(s => !s.Eliminado);
         modelBuilder.Entity<Factura>().HasQueryFilter(f => !f.Eliminado);
+        modelBuilder.Entity<EntradaDetalle>().HasQueryFilter(d => !d.Eliminado);
 
         modelBuilder.Entity<EntradaDetalle>()
             .HasOne(ed => ed.Producto)

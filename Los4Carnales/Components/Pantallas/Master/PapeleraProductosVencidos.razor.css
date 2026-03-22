@@ -1,0 +1,205 @@
+﻿/* --- CABECERA DE LA PANTALLA --- */
+.top-header-master {
+    background-color: #796e65;
+    color: #fff;
+    padding: 15px;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 600;
+    letter-spacing: 1px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.content-body {
+    padding: 30px 50px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+/* --- BARRA DE CONTROLES Y FILTROS --- */
+.controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 25px;
+}
+
+.filter-label {
+    font-size: 0.9rem;
+    color: #5d4037;
+    margin-bottom: 5px;
+    font-style: italic;
+    font-weight: 600;
+}
+
+.input-custom {
+    border: 1px solid #d7ccc8;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background-color: white;
+    outline: none;
+    color: #3e2723;
+}
+
+.badge-counter {
+    background-color: white;
+    border-radius: 50px;
+    padding: 10px 25px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border: 1px solid #efebe9;
+}
+
+    .badge-counter i {
+        color: #e53935;
+        font-size: 1.5rem;
+    }
+
+/* --- CONTENEDOR PRINCIPAL DE LA TABLA (BIG CARD) --- */
+.big-card-container {
+    border: 2px solid #5d4037;
+    border-radius: 25px;
+    padding: 30px;
+    min-height: 60vh;
+    background: transparent;
+    position: relative;
+}
+
+.table-header {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 25px;
+    margin-bottom: 10px;
+    color: #5d4037;
+    font-weight: 700;
+    font-size: 0.95rem;
+    text-transform: uppercase;
+    background-color: rgba(93, 64, 55, 0.05);
+    border-radius: 8px;
+}
+
+/* --- FILAS DE DATOS (DATA ROWS) --- */
+.data-row {
+    background-color: white;
+    border: 1px solid #424242;
+    border-radius: 12px;
+    padding: 15px 25px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+    .data-row:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        border-color: #5d4037;
+    }
+
+/* --- COLUMNAS DE LA TABLA --- */
+.col-id {
+    font-weight: 700;
+    width: 50px;
+    color: #3e2723;
+}
+
+.col-name, .col-contact {
+    display: flex;
+    flex-direction: column;
+}
+
+.col-status {
+    color: #e53935;
+    font-weight: 700;
+    text-align: center;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+}
+
+.col-actions {
+    display: flex;
+    gap: 15px;
+    justify-content: center; /* ESTO CENTRA LOS BOTONES */
+    align-items: center;
+}
+
+/* --- BOTONES DE ACCIÓN --- */
+.action-btn {
+    background: none;
+    border: none;
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: transform 0.2s;
+    padding: 5px;
+    border-radius: 50%;
+}
+
+    .action-btn:hover {
+        background-color: rgba(0,0,0,0.05);
+        transform: scale(1.1);
+    }
+
+.btn-view {
+    color: #0288d1; /* Azul para el ojo */
+}
+
+.btn-restore {
+    color: #2e7d32; /* Verde */
+}
+
+.btn-delete {
+    color: #c62828; /* Rojo */
+}
+
+/* =========================================
+   ESTILOS PARA EL MODAL DE DETALLES
+   ========================================= */
+.custom-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.5); /* Fondo oscuro semitransparente */
+    backdrop-filter: blur(3px); /* Efecto cristalino atrás */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.custom-modal-content {
+    background-color: #fffbf0; /* Fondo crema que combina con tu diseño */
+    border: 2px solid #5d4037;
+    border-radius: 20px;
+    width: 500px;
+    max-width: 90%;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.3s ease-out forwards;
+}
+
+.modal-header-custom {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid rgba(93, 64, 55, 0.1);
+    padding-bottom: 15px;
+}
+
+/* Animación suave al abrir el modal */
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
