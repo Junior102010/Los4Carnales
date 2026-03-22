@@ -62,12 +62,38 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
             {
                 if (sumar)
                     producto.Existencia += item.Cantidad;
-                else
+                else if (!item.SeDescontoExistencia)
+                {
                     producto.Existencia -= item.Cantidad;
+                    item.SeDescontoExistencia = true;
+                }
 
                 contexto.Producto.Update(producto);
             }
         }
+    }
+    public async Task Actualizar(EntradaDetalle detalle)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+
+        contexto.EntradaDetalles.Update(detalle);
+        await contexto.SaveChangesAsync();
+    }
+
+    public async Task AfectarExistenciaProducto(int productoId, bool sumar, int cantidad)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var producto = await contexto.Producto.FindAsync(productoId);
+        if (producto != null)
+        {
+            if (sumar)
+                producto.Existencia += cantidad;
+            else
+                producto.Existencia -= cantidad;
+
+            contexto.Producto.Update(producto);
+        }
+        await contexto.SaveChangesAsync();
     }
 
     public async Task<Entrada?> Buscar(int id)
@@ -77,7 +103,19 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
             .Include(e => e.Proveedor)
             .Include(e => e.EntradaDetalles)
             .ThenInclude(d => d.Producto)
+            .ThenInclude(d => d.UnidadMedida)
+            .Include(e => e.EntradaDetalles)
+            .ThenInclude(d => d.Producto)
+            .ThenInclude(d => d.Categoria)
             .FirstOrDefaultAsync(e => e.EntradaId == id);
+    }
+
+    public async Task<EntradaDetalle?> BuscarEntradaDetalle(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.EntradaDetalles
+            .Include(e => e.Producto)
+            .FirstOrDefaultAsync(e => e.DetalleId == id);
     }
 
     public async Task<List<Entrada>> Listar(Expression<Func<Entrada, bool>> criterio)
@@ -91,6 +129,51 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
             .ToListAsync();
     }
 
+    public async Task<List<EntradaDetalle>> ListarEntradasVencidas()
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        List<EntradaDetalle> entradasVencidas = new List<EntradaDetalle>();
+        List<Entrada>? entradas = await contexto.Entrada
+       .Include(e => e.Proveedor)
+       .Include(e => e.EntradaDetalles)
+       .ThenInclude(d => d.Producto)
+       .ThenInclude(d => d.UnidadMedida)
+       .Include(e => e.EntradaDetalles)
+       .ThenInclude(d => d.Producto)
+       .ThenInclude(d => d.Categoria)
+       .Where(e => e.EntradaId > 0)
+       .AsNoTracking()
+       .ToListAsync();
+
+        if (entradas == null) return new List<EntradaDetalle>();
+
+        foreach (var item in entradas)
+        {
+            foreach (var p in item.EntradaDetalles)
+            {
+                if (p.Producto != null && p.FechaVencimiento <= DateTime.Now)
+                {
+                    entradasVencidas.Add(p);
+                }
+            }
+        }
+
+        return entradasVencidas;
+    }
+
+    public async Task<List<EntradaDetalle>> ListarEntradasVencidas(Expression<Func<EntradaDetalle, bool>> criterio)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.EntradaDetalles
+       .Include(d => d.Producto)
+       .ThenInclude(d => d.UnidadMedida)
+       .Include(d => d.Producto)
+       .ThenInclude(d => d.Categoria)
+       .Include(d => d. Entrada)
+       .Where(criterio)
+       .AsNoTracking()
+       .ToListAsync();
+    }
 
     public async Task<bool> Eliminar(int id)
     {
@@ -103,10 +186,10 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
         if (entrada == null)
             return false;
 
-       
+
         await AfectarExistencia(contexto, entrada.EntradaDetalles.ToArray(), false);
 
-      
+
         entrada.Eliminado = true;
         contexto.Update(entrada);
 
@@ -119,7 +202,7 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
         return await contexto.Entrada
             .IgnoreQueryFilters()
             .Include(e => e.Proveedor)
-            .Include(e => e.EntradaDetalles) 
+            .Include(e => e.EntradaDetalles)
             .Where(e => e.Eliminado)
             .AsNoTracking()
             .ToListAsync();
@@ -137,10 +220,10 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
         if (entrada == null)
             return false;
 
-        
+
         await AfectarExistencia(contexto, entrada.EntradaDetalles.ToArray(), true);
 
-       
+
         entrada.Eliminado = false;
         contexto.Entrada.Update(entrada);
 

@@ -4,6 +4,7 @@ using Los4Carnales.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Los4Carnales.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260322024420_AddFechaVencimientoEntradaDetalle")]
+    partial class AddFechaVencimientoEntradaDetalle
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -169,14 +172,8 @@ namespace Los4Carnales.Migrations
                     b.Property<DateTime>("FechaVencimiento")
                         .HasColumnType("datetime2");
 
-                    b.Property<bool>("MostrarVencimiento")
-                        .HasColumnType("bit");
-
                     b.Property<int>("ProductoId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("SeDescontoExistencia")
-                        .HasColumnType("bit");
 
                     b.HasKey("DetalleId");
 
@@ -679,7 +676,7 @@ namespace Los4Carnales.Migrations
 
             modelBuilder.Entity("Los4Carnales.Models.EntradaDetalle", b =>
                 {
-                    b.HasOne("Los4Carnales.Models.Entrada", "Entrada")
+                    b.HasOne("Los4Carnales.Models.Entrada", null)
                         .WithMany("EntradaDetalles")
                         .HasForeignKey("EntradaId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -688,8 +685,6 @@ namespace Los4Carnales.Migrations
                     b.HasOne("Los4Carnales.Models.Producto", "Producto")
                         .WithMany()
                         .HasForeignKey("ProductoId");
-
-                    b.Navigation("Entrada");
 
                     b.Navigation("Producto");
                 });

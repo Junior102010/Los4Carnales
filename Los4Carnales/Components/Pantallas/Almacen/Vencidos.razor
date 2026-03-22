@@ -1,0 +1,325 @@
+﻿@page "/Producto/Vencidos"
+@using Microsoft.AspNetCore.Authorization
+
+@using Microsoft.AspNetCore.Identity
+@rendermode InteractiveServer
+@inject ProductosServices productosService
+@inject EntradasServices entradasServices
+@inject NavigationManager navigationManager
+@inject PageTitleService PageTitleService
+@inject SweetAlertService Swal
+@inject UserManager<ApplicationUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Productos Vencidos</PageTitle>
+
+<div class="container">
+
+    <div class="card card-glass rounded-4 p-2">
+
+        <div class="card-body">
+
+            @* --- FILTROS --- *@
+            <div class="row align-items-end mb-4">
+
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Filtrar por</label>
+                    <InputSelect class="form-select input-glass" @bind-Value="Filtro">
+                        <option value="" selected disabled>Elija una opción</option>
+                        <option value="Nombre">Nombre</option>
+                        <option value="Categoria">Categoría</option>
+                        <option value="Etiqueta">Etiqueta</option>
+                    </InputSelect>
+                </div>
+
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Búsqueda</label>
+                    <div class="input-group">
+                        <input class="form-control input-glass" @bind="ValorFiltro" placeholder="Buscar..." />
+                        <button type="button" class="btn btn-outline-success bi bi-search" @onclick="Buscar"></button>
+                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Restablecer"></button>
+                    </div>
+                </div>
+
+                <div class="col-md-1"></div>
+
+
+            </div>
+
+            @* --- TABLA --- *@
+
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="fw-bold text-muted m-0">Productos Vencidos</h6>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover bg-transparent align-middle">
+                    <thead class="text-black" style="background-color: rgba(0,0,0,0.03);">
+                        <tr>
+                            <th class="ps-3">Producto</th>
+                            <th class="text-center">Categoría</th>
+                            <th class="text-center">Proveedor</th>
+                            <th class="text-center">Fecha Entrada</th>
+                            <th class="text-center">Fecha Vencimiento</th>
+
+                            <th class="text-center">Cantidad Recibida</th>
+                            <th class="text-center">Acciones</th>
+
+                        </tr>
+
+
+                    </thead>
+                    <tbody>
+                        @foreach (var item in ListaEntradasDetallesVencidas)
+                        {
+                            if (item.FechaVencimiento <= DateTime.Now && item.MostrarVencimiento)
+                            {
+                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                    <td class="ps-3">@(item.Producto?.NombreProducto ?? "Producto Eliminado")</td>
+                                    <td class="ps-3">@(item?.Producto?.Categoria?.Nombre ?? "Sin Categoría.")</td>
+                                    <td class="ps-3">@(item?.Entrada?.Proveedor?.Nombre)</td>
+                                    <td class="text-center fw-bold fs-5" style="color: #3D5D35;">@(item?.Entrada?.FechaEntrada.ToString("dd/MM/yyyy"))</td>
+                                    <td class="text-center fw-bold fs-5" style="color: red">@item?.FechaVencimiento.ToString("dd/MM/yyyy") </td>
+                                    <td class="text-center fw-bold fs-5" style="color: #3D5D35;">@item?.Cantidad</td>
+                                    <td><button class="btn btn-dark bi bi-arrow-bar-down me-1" @onclick="() => DescontarExistencia(item.DetalleId)"> Descontar</button><button type="button" class="btn btn-dark bi bi-trash " @onclick="() => EliminarProductoVencido(item.DetalleId)"></button>  </td>
+                                </tr>
+                            }
+                        }
+                        @if (!ListaEntradasDetallesVencidas.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted">No hay entradas con productos vencidos.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* --- FOOTER --- *@
+
+        <div class="col-md-4 text-start p-2">
+            <div class="d-flex justify-content-start gap-2">
+                <a href="/Almacen" class="btn btn-outline-secondary">
+                    <span class="bi bi-arrow-left"></span> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<EntradaDetalle> ListaEntradasDetallesVencidas { get; set; } = new List<EntradaDetalle>();
+
+    public string Filtro { get; set; } = string.Empty;
+    public string ValorFiltro { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Almacen");
+        await Buscar();
+    }
+
+    private async Task EliminarProductoVencido(int idDetalle)
+    {
+        var detalle = await entradasServices.BuscarEntradaDetalle(idDetalle);
+        if (detalle == null) return;
+
+        var confirmacion = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "¿Estás seguro?",
+                Text = $"¿Deseas marcar como eliminado esta entrada de producto y descontar toda su existencia vencida?",
+                Icon = SweetAlertIcon.Warning,
+                ShowCancelButton = true,
+                ConfirmButtonText = "<i class=\"bi bi-trash-fill me-1\"></i> Eliminar",
+                CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+            });
+
+        if (!string.IsNullOrEmpty(confirmacion.Value))
+        {
+            var passwordResult = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Confirmar identidad",
+                    Text = "Ingresa tu contraseña de administrador para autorizar:",
+                    Input = SweetAlertInputType.Password,
+                    InputPlaceholder = "Tu contraseña",
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "<i class=\"bi bi-shield-lock-fill me-1\"></i> Verificar",
+                    CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+                });
+
+            if (!string.IsNullOrEmpty(passwordResult.Value))
+            {
+                string passwordIngresado = passwordResult.Value;
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var user = await UserManager.GetUserAsync(authState.User);
+
+                bool passwordCorrecto = false;
+                if (user != null)
+                {
+                    passwordCorrecto = await UserManager.CheckPasswordAsync(user, passwordIngresado);
+                }
+
+                if (passwordCorrecto)
+                {
+                    detalle.MostrarVencimiento = false;
+
+                    if (!detalle.SeDescontoExistencia)
+                    {
+                        await entradasServices.AfectarExistenciaProducto(detalle.ProductoId, false, detalle.Cantidad);
+                        detalle.SeDescontoExistencia = true;
+                    }
+
+                    await entradasServices.Actualizar(detalle);
+
+                    await Buscar();
+
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "¡Completado!",
+                            Text = "El producto se descontó y se marcó como eliminado correctamente.",
+                            Icon = SweetAlertIcon.Success
+                        });
+                    navigationManager.NavigateTo("/Producto/Vencidos");
+
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                        {
+                            Title = "Acceso Denegado",
+                            Text = "La contraseña es incorrecta. Operación cancelada.",
+                            Icon = SweetAlertIcon.Error
+                        });
+                }
+            }
+
+        }
+    }
+
+    private async Task DescontarExistencia(int idDetalle, bool claveAdmin = true)
+    {
+        var detalle = await entradasServices.BuscarEntradaDetalle(idDetalle);
+
+        if (detalle == null) return;
+
+
+
+
+        if (detalle.SeDescontoExistencia)
+        {
+            await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "¡Vaya...!",
+                Text = "El producto se descontó anteriormente.",
+                Icon = SweetAlertIcon.Success
+            });
+            navigationManager.NavigateTo("/Producto/Vencidos");
+            return;
+        }
+ 
+
+        var confirmacion = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "¿Estás seguro?",
+            Text = $"¿Deseas descontar la existencia vencida de {detalle?.Producto?.NombreProducto} (restar su inventario)?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "<i class=\"bi bi-trash-fill me-1\"></i> Eliminar",
+            CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(confirmacion.Value))
+        {
+            var passwordResult = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmar identidad",
+                Text = "Ingresa tu contraseña de administrador para autorizar:",
+                Input = SweetAlertInputType.Password,
+                InputPlaceholder = "Tu contraseña",
+                ShowCancelButton = true,
+                ConfirmButtonText = "<i class=\"bi bi-shield-lock-fill me-1\"></i> Verificar",
+                CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+            });
+
+            if (!string.IsNullOrEmpty(passwordResult.Value))
+            {
+                string passwordIngresado = passwordResult.Value;
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var user = await UserManager.GetUserAsync(authState.User);
+
+                bool passwordCorrecto = false;
+                if (user != null)
+                {
+                    passwordCorrecto = await UserManager.CheckPasswordAsync(user, passwordIngresado);
+                }
+
+                if (passwordCorrecto)
+                {
+                    await entradasServices.AfectarExistenciaProducto(detalle.ProductoId, false, detalle.Cantidad);
+
+                    detalle.SeDescontoExistencia = true;
+
+                    await entradasServices.Actualizar(detalle);
+
+                    await Buscar();
+
+                    await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "¡Completado!",
+                        Text = "El producto se descontó correctamente.",
+                        Icon = SweetAlertIcon.Success
+                    });
+                    navigationManager.NavigateTo("/Producto/Vencidos");
+
+                }
+                else
+                {
+                    await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "Acceso Denegado",
+                        Text = "La contraseña es incorrecta. Operación cancelada.",
+                        Icon = SweetAlertIcon.Error
+                    });
+                }
+            }
+        }
+
+
+    }
+
+    private async Task Buscar()
+    {
+        if (!string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            if (Filtro == "Nombre")
+            {
+                ListaEntradasDetallesVencidas = await entradasServices.ListarEntradasVencidas(
+                    p => p.Producto.NombreProducto != null && p.Producto.NombreProducto.ToLower().Contains(ValorFiltro.ToLower()));
+            }
+            else if (Filtro == "Categoria")
+            {
+                ListaEntradasDetallesVencidas = await entradasServices.ListarEntradasVencidas(
+                    p => p.Producto.Categoria != null && p.Producto.Categoria.Nombre.ToLower().Contains(ValorFiltro.ToLower()));
+            }
+            else if (Filtro == "Etiqueta")
+            {
+                ListaEntradasDetallesVencidas = await entradasServices.ListarEntradasVencidas(
+                    p => p.Producto.Etiqueta != null && p.Producto.Etiqueta.ToLower().Contains(ValorFiltro.ToLower()));
+            }
+        }
+        else
+        {
+            ListaEntradasDetallesVencidas = await entradasServices.ListarEntradasVencidas();
+        }
+    }
+
+    private async Task Restablecer()
+    {
+        await Buscar();
+        Filtro = string.Empty;
+        ValorFiltro = string.Empty;
+    }
+}

@@ -42,4 +42,5 @@ public class Producto
     public int Existencia { get; set; }
 
     public bool Eliminado { get; set; } = false;
+
 }
