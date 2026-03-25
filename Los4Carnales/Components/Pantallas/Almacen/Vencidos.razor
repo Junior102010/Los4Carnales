@@ -80,10 +80,10 @@
                                     <td class="ps-3">@(item.Producto?.NombreProducto ?? "Producto Eliminado")</td>
                                     <td class="ps-3">@(item?.Producto?.Categoria?.Nombre ?? "Sin Categoría.")</td>
                                     <td class="ps-3">@(item?.Entrada?.Proveedor?.Nombre)</td>
-                                    <td class="text-center fw-bold fs-5" style="color: #3D5D35;">@(item?.Entrada?.FechaEntrada.ToString("dd/MM/yyyy"))</td>
-                                    <td class="text-center fw-bold fs-5" style="color: red">@item?.FechaVencimiento.ToString("dd/MM/yyyy") </td>
-                                    <td class="text-center fw-bold fs-5" style="color: #3D5D35;">@item?.Cantidad</td>
-                                    <td><button class="btn btn-dark bi bi-arrow-bar-down me-1" @onclick="() => DescontarExistencia(item.DetalleId)"> Descontar</button><button type="button" class="btn btn-dark bi bi-trash " @onclick="() => EliminarProductoVencido(item.DetalleId)"></button>  </td>
+                                    <td class="text-center fw-bold fs-5.5" style="color: #3D5D35;">@(item?.Entrada?.FechaEntrada.ToString("dd/MM/yyyy"))</td>
+                                    <td class="text-center fw-bold fs-5.5" style="color: red">@item?.FechaVencimiento.ToString("dd/MM/yyyy") </td>
+                                    <td class="text-center fw-bold fs-5.5" style="color: #3D5D35;">@item?.Cantidad</td>
+                                    <td><button class="btn btn-light bi bi-arrow-bar-down me-1" @onclick="() => DescontarExistencia(item.DetalleId)"> Descontar</button><button type="button" class="btn btn-light bi bi-trash " @onclick="() => EliminarProductoVencido(item.DetalleId)"></button>  </td>
                                 </tr>
                             }
                         }
