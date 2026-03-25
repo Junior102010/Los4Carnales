@@ -26,7 +26,7 @@
             <div class="card-body">
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h6 class="fw-bold text-muted m-0">Datos Generales (Editable)</h6>
+                    <h6 class="fw-bold text-muted m-0">Datos Generales</h6>
                     <span class="badge bg-primary fs-6">Lote: @Entrada.NumeroLote</span>
                 </div>
 
@@ -56,11 +56,57 @@
                     </div>
                 </div>
 
+                @* --- SECCIÓN DE FORMALIZACIÓN (Editable) --- *@
+                <div class="card bg-light border-0 mb-4 p-3 rounded-3">
+                    <div class="d-flex align-items-center mb-3">
+                        <h6 class="text-muted fw-bold m-0 me-3">Información Comercial y Fiscal</h6>
+                        <div class="form-check form-switch m-0">
+                            <InputCheckbox class="form-check-input" @bind-Value="Entrada.EsFormal" id="checkFormalEdit" />
+                            <label class="form-check-label fw-bold text-primary" for="checkFormalEdit">¿Es Formal?</label>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label text-muted small fw-bold mb-1">Orden de Compra</label>
+                            <InputText class="form-control input-glass" @bind-Value="Entrada.OrdenCompra" />
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label text-muted small fw-bold mb-1">Cotización</label>
+                            <InputText class="form-control input-glass" @bind-Value="Entrada.Cotizacion" />
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <label class="form-label text-muted small fw-bold mb-1">Fecha O.C.</label>
+                            <InputDate class="form-control input-glass" @bind-Value="Entrada.FechaOrdenCompra" />
+                        </div>
+
+                        @if (Entrada.EsFormal)
+                        {
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label text-muted small fw-bold mb-1">Días de Pago</label>
+                                <InputNumber class="form-control input-glass" @bind-Value="Entrada.AcuerdoPagoDias" />
+                            </div>
+                            <div class="col-md-4 mb-2 mt-2">
+                                <label class="form-label text-muted small fw-bold mb-1">Razón Social</label>
+                                <InputText class="form-control input-glass" @bind-Value="Entrada.RazonSocial" />
+                            </div>
+                            <div class="col-md-4 mb-2 mt-2">
+                                <label class="form-label text-muted small fw-bold mb-1">RNC Empresa</label>
+                                <InputText class="form-control input-glass" @bind-Value="Entrada.RncEmpresa" />
+                            </div>
+                            <div class="col-md-4 mb-2 mt-2">
+                                <label class="form-label text-muted small fw-bold mb-1">RNC Proveedor</label>
+                                <InputText class="form-control input-glass" @bind-Value="Entrada.RncProveedor" />
+                            </div>
+                        }
+                    </div>
+                </div>
+                @* -------------------------------- *@
+
                 <hr class="border-secondary opacity-25" />
 
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h6 class="fw-bold text-muted m-0">Productos Recibidos</h6>
-                    <span class="badge bg-success bg-opacity-75">Solo Lectura</span>
                 </div>
 
                 <div class="table-responsive">
@@ -72,6 +118,7 @@
                                 <th class="text-center">Unidad</th>
                                 <th class="text-center">Cantidad Recibida</th>
                                 <th class="text-center">Fecha Vencimiento</th>
+                                <th class="text-center">Modificar</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,19 +126,22 @@
                             {
                                 <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
                                     <td class="ps-3">@(item.Producto?.NombreProducto ?? "Producto Eliminado")</td>
-                                    <td class="text-center small text-muted">@(item?.Producto?.Categoria?.Nombre )</td>
+                                    <td class="text-center small text-muted">@(item?.Producto?.Categoria?.Nombre)</td>
                                     <td class="text-center small text-muted">@(item?.Producto?.UnidadMedida?.Descripcion ?? "Sin Categoría")</td>
                                     <td class="text-center fw-bold fs-5" style="color: #3D5D35;">@item?.Cantidad</td>
                                     <td class="text-center fw-bold fs-5"
                                         style="color: @(item?.FechaVencimiento <= DateTime.Today ? "red" : "#3D5D35");">
                                         @item?.FechaVencimiento.ToString("dd/MM/yyyy")
                                     </td>
+                                    <td class="text-center">
+                                        <button type="button" class="btn btn-sm btn-outline-warning border-0 bi bi-pencil-square fs-5" title="Modificar Cantidad" @onclick="() => ModificarCantidadAdmin(item)"></button>
+                                    </td>
                                 </tr>
                             }
                             @if (!Entrada.EntradaDetalles.Any())
                             {
                                 <tr>
-                                    <td colspan="4" class="text-center text-muted">No hay detalles disponibles.</td>
+                                    <td colspan="6" class="text-center text-muted py-4">No hay detalles disponibles.</td>
                                 </tr>
                             }
                         </tbody>
@@ -106,7 +156,6 @@
                 </a>
 
                 <div class="d-flex gap-2">
-                    @* Solo mostramos el botón eliminar si ya existe en BD *@
                     @if (Entrada.EntradaId > 0)
                     {
                         <button type="button" class="btn btn-outline-danger px-4" @onclick="Eliminar">
@@ -147,17 +196,68 @@
         }
     }
 
+    public async Task ModificarCantidadAdmin(EntradaDetalle item)
+    {
+        var passwordResult = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "Acceso Administrativo",
+            Text = "Ingresa tu contraseña de administrador para modificar la cantidad:",
+            Input = SweetAlertInputType.Password,
+            InputPlaceholder = "Tu contraseña",
+            ShowCancelButton = true,
+            ConfirmButtonText = "<i class=\"bi bi-shield-lock-fill me-1\"></i> Verificar",
+            CancelButtonText = "Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(passwordResult.Value))
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            var user = await UserManager.GetUserAsync(authState.User);
+            bool passwordCorrecto = user != null && await UserManager.CheckPasswordAsync(user, passwordResult.Value);
+
+            if (passwordCorrecto)
+            {
+                var cantResult = await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Nueva Cantidad",
+                    Text = $"Producto: {item.Producto?.NombreProducto}",
+                    Input = SweetAlertInputType.Number,
+                    InputValue = item.Cantidad.ToString(),
+                    ShowCancelButton = true,
+                    ConfirmButtonText = "Guardar",
+                    CancelButtonText = "Cancelar"
+                });
+
+                if (!string.IsNullOrEmpty(cantResult.Value) && int.TryParse(cantResult.Value, out int nuevaCantidad) && nuevaCantidad > 0)
+                {
+                    item.Cantidad = nuevaCantidad;
+                    StateHasChanged();
+                }
+            }
+            else
+            {
+                await Swal.FireAsync(new SweetAlertOptions
+                {
+                    Title = "Acceso Denegado",
+                    Text = "Contraseña incorrecta.",
+                    Icon = SweetAlertIcon.Error
+                });
+            }
+        }
+    }
+
     public async Task Guardar()
     {
         try
         {
+            // El servicio de backend se encarga del cálculo de stock (reversar stock y sumar nuevo stock)
             var ok = await entradasService.Guardar(Entrada);
 
             if (ok)
             {
                 await Swal.FireAsync(new SweetAlertOptions
                 {
-                    Title = "¡Guardado!",
+                    Title = "¡Actualizado!",
                     Text = "La entrada se guardó exitosamente.",
                     Icon = SweetAlertIcon.Success
                 });
@@ -204,19 +304,11 @@
 
             if (!string.IsNullOrEmpty(passwordResult.Value))
             {
-                string passwordIngresado = passwordResult.Value;
                 var authState = await AuthStateProvider.GetAuthenticationStateAsync();
                 var user = await UserManager.GetUserAsync(authState.User);
 
-                bool passwordCorrecto = false;
-                if (user != null)
+                if (user != null && await UserManager.CheckPasswordAsync(user, passwordResult.Value))
                 {
-                    passwordCorrecto = await UserManager.CheckPasswordAsync(user, passwordIngresado);
-                }
-
-                if (passwordCorrecto)
-                {
-                    // Llama al servicio de Entradas para hacer el borrado lógico
                     var ok = await entradasService.Eliminar(Entrada.EntradaId);
 
                     if (ok)
@@ -231,22 +323,12 @@
                     }
                     else
                     {
-                        await Swal.FireAsync(new SweetAlertOptions
-                        {
-                            Title = "Error",
-                            Text = "No se pudo eliminar de la base de datos.",
-                            Icon = SweetAlertIcon.Error
-                        });
+                        await Swal.FireAsync("Error", "No se pudo eliminar de la base de datos.", SweetAlertIcon.Error);
                     }
                 }
                 else
                 {
-                    await Swal.FireAsync(new SweetAlertOptions
-                    {
-                        Title = "Acceso Denegado",
-                        Text = "La contraseña es incorrecta. Operación cancelada.",
-                        Icon = SweetAlertIcon.Error
-                    });
+                    await Swal.FireAsync("Acceso Denegado", "La contraseña es incorrecta. Operación cancelada.", SweetAlertIcon.Error);
                 }
             }
         }

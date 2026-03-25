@@ -12,6 +12,17 @@
 
 <PageTitle>Crear Entrada</PageTitle>
 
+<style>
+    .cursor-pointer {
+        cursor: pointer;
+        transition: opacity 0.2s ease-in-out;
+    }
+
+        .cursor-pointer:hover {
+            opacity: 0.8;
+        }
+</style>
+
 <div class="container">
     <div class="card card-glass rounded-4 p-2">
         <div class="card-header bg-transparent text-center border-0 pt-3">
@@ -22,6 +33,7 @@
             <DataAnnotationsValidator />
 
             <div class="card-body">
+                @* --- DATOS PRINCIPALES (Siempre visibles) --- *@
                 <div class="row mb-4">
                     <div class="col-md-2">
                         <label class="form-label text-muted small fw-bold mb-1">Nº Lote</label>
@@ -47,90 +59,151 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label text-muted small fw-bold mb-1">Concepto / Factura</label>
+                        <label class="form-label text-muted small fw-bold mb-1">Concepto / Referencia</label>
                         <InputText class="form-control input-glass" @bind-Value="Entrada.Concepto" placeholder="Factura 001 o Compra..." />
                         <ValidationMessage For="(() => Entrada.Concepto)" />
                     </div>
                 </div>
 
+                @* --- SECCIÓN DE FORMALIZACIÓN (Colapsable) --- *@
+                <div class="card bg-light border-0 mb-4 p-3 rounded-3">
+                    <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @onclick="() => MostrarInfoComercial = !MostrarInfoComercial">
+                        <div class="d-flex align-items-center">
+                            <h6 class="text-muted fw-bold m-0 me-3">Información Comercial y Fiscal</h6>
+                            <div class="form-check form-switch m-0" @onclick:stopPropagation="true">
+                                <InputCheckbox class="form-check-input" @bind-Value="Entrada.EsFormal" id="checkFormal" />
+                                <label class="form-check-label fw-bold text-primary" for="checkFormal">¿Es Formal?</label>
+                            </div>
+                        </div>
+                        <i class="bi @(MostrarInfoComercial ? "bi-chevron-up" : "bi-chevron-down") fs-5 text-muted"></i>
+                    </div>
+
+                    @if (MostrarInfoComercial)
+                    {
+                        <div class="row">
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label text-muted small fw-bold mb-1">Orden de Compra</label>
+                                <InputText class="form-control input-glass" @bind-Value="Entrada.OrdenCompra" placeholder="Ej: OC-001" />
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label text-muted small fw-bold mb-1">Cotización</label>
+                                <InputText class="form-control input-glass" @bind-Value="Entrada.Cotizacion" placeholder="Ej: COT-202" />
+                            </div>
+                            <div class="col-md-3 mb-2">
+                                <label class="form-label text-muted small fw-bold mb-1">Fecha O.C.</label>
+                                <InputDate class="form-control input-glass" @bind-Value="Entrada.FechaOrdenCompra" />
+                            </div>
+
+                            @if (Entrada.EsFormal)
+                            {
+                                <div class="col-md-3 mb-2">
+                                    <label class="form-label text-muted small fw-bold mb-1">Días de Pago</label>
+                                    <InputNumber class="form-control input-glass" @bind-Value="Entrada.AcuerdoPagoDias" placeholder="30" />
+                                </div>
+                                <div class="col-md-4 mb-2 mt-2">
+                                    <label class="form-label text-muted small fw-bold mb-1">Razón Social</label>
+                                    <InputText class="form-control input-glass" @bind-Value="Entrada.RazonSocial" placeholder="Nombre Legal" />
+                                </div>
+                                <div class="col-md-4 mb-2 mt-2">
+                                    <label class="form-label text-muted small fw-bold mb-1">RNC Empresa</label>
+                                    <InputText class="form-control input-glass" @bind-Value="Entrada.RncEmpresa" />
+                                </div>
+                                <div class="col-md-4 mb-2 mt-2">
+                                    <label class="form-label text-muted small fw-bold mb-1">RNC Proveedor</label>
+                                    <InputText class="form-control input-glass" @bind-Value="Entrada.RncProveedor" />
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+                @* -------------------------------- *@
+
                 <hr class="border-secondary opacity-25" />
 
+                @* --- SECCIÓN DE PRODUCTOS (Colapsable) --- *@
                 <div class="card bg-light border-0 mb-3 p-3">
-                    <h6 class="text-muted fw-bold mb-3">Agregar Producto al Inventario</h6>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Producto</label>
-                            <InputSelect class="form-select input-glass" @bind-Value="Detalle.ProductoId">
-                                <option value="0" selected disabled>Seleccione un producto</option>
-                                @foreach (var prod in ListaProductos)
-                                {
-                                    <option value="@prod.ProductoId">@prod.NombreProducto (@prod.UnidadMedida.Abreviatura)</option>
-                                }
-                            </InputSelect>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label small fw-bold">Modo de Entrada</label>
-                            <div class="btn-group w-100" role="group">
-                                <input type="radio" class="btn-check" name="btnradio" id="btnDirecta" autocomplete="off"
-                                       checked="@(TipoEntrada == "Directa")" @onclick='() => TipoEntrada = "Directa"'>
-                                <label class="btn btn-outline-secondary" for="btnDirecta">Directo</label>
-
-                                <input type="radio" class="btn-check" name="btnradio" id="btnPesaje" autocomplete="off"
-                                       checked="@(TipoEntrada == "Pesaje")" @onclick='() => TipoEntrada = "Pesaje"'>
-                                <label class="btn btn-outline-secondary" for="btnPesaje">Pesaje (Jaulas)</label>
-
-                                <input type="radio" class="btn-check" name="btnradio" id="btnConv" autocomplete="off"
-                                       checked="@(TipoEntrada == "Conversion")" @onclick='() => TipoEntrada = "Conversion"'>
-                                <label class="btn btn-outline-secondary" for="btnConv">Sacos/Cajas</label>
-                            </div>
-                        </div>
+                    <div class="d-flex justify-content-between align-items-center mb-3 cursor-pointer" @onclick="() => MostrarAgregarProducto = !MostrarAgregarProducto">
+                        <h6 class="text-muted fw-bold m-0">Agregar Producto al Inventario</h6>
+                        <i class="bi @(MostrarAgregarProducto ? "bi-chevron-up" : "bi-chevron-down") fs-5 text-muted"></i>
                     </div>
 
-                    <div class="row align-items-end">
-                        @if (TipoEntrada == "Pesaje")
-                        {
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">Peso Bruto</label>
-                                <input type="number" class="form-control" @bind="PesoBruto" @bind:after="CalcularCantidad" />
+                    @if (MostrarAgregarProducto)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Producto</label>
+                                <InputSelect class="form-select input-glass" @bind-Value="Detalle.ProductoId">
+                                    <option value="0" selected disabled>Seleccione un producto</option>
+                                    @foreach (var prod in ListaProductos)
+                                    {
+                                        <option value="@prod.ProductoId">@prod.NombreProducto (@prod.UnidadMedida.Abreviatura)</option>
+                                    }
+                                </InputSelect>
                             </div>
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">Tara (Jaula)</label>
-                                <input type="number" class="form-control" @bind="PesoTara" @bind:after="CalcularCantidad" />
-                            </div>
-                        }
-                        else if (TipoEntrada == "Conversion")
-                        {
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">Cant. Envases</label>
-                                <input type="number" class="form-control" @bind="CantidadEmpaques" @bind:after="CalcularCantidad" />
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label small text-muted">Contenido p/Envase</label>
-                                <input type="number" class="form-control" @bind="ContenidoPorEmpaque" @bind:after="CalcularCantidad" />
-                            </div>
-                        }
+                            <div class="col-md-6">
+                                <label class="form-label small fw-bold">Modo de Entrada</label>
+                                <div class="btn-group w-100" role="group">
+                                    <input type="radio" class="btn-check" name="btnradio" id="btnDirecta" autocomplete="off"
+                                           checked="@(TipoEntrada == "Directa")" @onclick='() => TipoEntrada = "Directa"'>
+                                    <label class="btn btn-outline-secondary" for="btnDirecta">Directo</label>
 
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-success">Cantidad Neta</label>
-                            <InputNumber class="form-control input-glass fw-bold" @bind-Value="Detalle.Cantidad" disabled="@(TipoEntrada != "Directa")" />
+                                    <input type="radio" class="btn-check" name="btnradio" id="btnPesaje" autocomplete="off"
+                                           checked="@(TipoEntrada == "Pesaje")" @onclick='() => TipoEntrada = "Pesaje"'>
+                                    <label class="btn btn-outline-secondary" for="btnPesaje">Pesaje (Jaulas)</label>
+
+                                    <input type="radio" class="btn-check" name="btnradio" id="btnConv" autocomplete="off"
+                                           checked="@(TipoEntrada == "Conversion")" @onclick='() => TipoEntrada = "Conversion"'>
+                                    <label class="btn btn-outline-secondary" for="btnConv">Sacos/Cajas</label>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label text-muted small fw-bold mb-1">Fecha Vencimiento</label>
-                            <InputDate class="form-control input-glass" @bind-Value="Detalle.FechaVencimiento" />
-                        </div>
-                    </div>
+                        <div class="row align-items-end">
+                            @if (TipoEntrada == "Pesaje")
+                            {
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted">Peso Bruto</label>
+                                    <input type="number" class="form-control" @bind="PesoBruto" @bind:after="CalcularCantidad" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted">Tara (Jaula)</label>
+                                    <input type="number" class="form-control" @bind="PesoTara" @bind:after="CalcularCantidad" />
+                                </div>
+                            }
+                            else if (TipoEntrada == "Conversion")
+                            {
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted">Cant. Envases</label>
+                                    <input type="number" class="form-control" @bind="CantidadEmpaques" @bind:after="CalcularCantidad" />
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label small text-muted">Contenido p/Envase</label>
+                                    <input type="number" class="form-control" @bind="ContenidoPorEmpaque" @bind:after="CalcularCantidad" />
+                                </div>
+                            }
 
-                    <div class="row mt-3">
-                        <div class="col-md-12 text-end">
-                            <button type="button" class="btn btn-gradiente px-4" @onclick="AgregarDetalle">
-                                <span class="bi bi-plus-lg"></span> Agregar a la Lista
-                            </button>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-success">Cantidad Neta</label>
+                                <InputNumber class="form-control input-glass fw-bold" @bind-Value="Detalle.Cantidad" disabled="@(TipoEntrada != "Directa")" />
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label text-muted small fw-bold mb-1">Fecha Vencimiento</label>
+                                <InputDate class="form-control input-glass" @bind-Value="Detalle.FechaVencimiento" />
+                            </div>
                         </div>
-                    </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-12 text-end">
+                                <button type="button" class="btn btn-gradiente px-4" @onclick="AgregarDetalle">
+                                    <span class="bi bi-plus-lg"></span> Agregar a la Lista
+                                </button>
+                            </div>
+                        </div>
+                    }
                 </div>
 
+                @* --- TABLA DE DETALLES --- *@
                 <div class="table-responsive mt-4">
                     <table class="table table-hover bg-transparent align-middle">
                         <thead class="text-black" style="background-color: rgba(0,0,0,0.03);">
@@ -175,6 +248,10 @@
 </div>
 
 @code {
+    // --- Variables de Estado para Mostrar/Ocultar secciones ---
+    private bool MostrarInfoComercial { get; set; } = true;
+    private bool MostrarAgregarProducto { get; set; } = true;
+
     public Entrada Entrada { get; set; } = new Entrada();
     public EntradaDetalle Detalle { get; set; } = new EntradaDetalle();
 
@@ -193,14 +270,10 @@
     {
         PageTitleService.SetTitle("Crear Entrada");
         ListaProductos = await productosService.Listar(p => p.ProductoId > 0);
-
-        // Cargar proveedores desde tu servicio
         ListaProveedores = await entradasService.ListarProveedores();
 
         Entrada.FechaEntrada = DateTime.Now;
         Detalle.FechaVencimiento = DateTime.Now.AddDays(5);
-
-        // Generamos el Lote Automático
         GenerarLote();
     }
 
@@ -217,7 +290,6 @@
 
         if (Detalle.ProductoId <= 0) { Mensaje = "Debe seleccionar un producto."; return; }
         if (Detalle.Cantidad <= 0) { Mensaje = "La cantidad debe ser mayor a 0."; return; }
-       // if (Detalle.FechaVencimiento <= Entrada.FechaEntrada) { Mensaje = "Fecha de Vencimiento menor que fecha de Entrada. Por favor, Revise."; return;  }
 
         var existente = Entrada.EntradaDetalles.FirstOrDefault(d => d.ProductoId == Detalle.ProductoId);
         if (existente != null)
