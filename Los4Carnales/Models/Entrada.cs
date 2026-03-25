@@ -18,6 +18,17 @@ public class Entrada
     public string NumeroLote { get; set; } = string.Empty;
     public bool Eliminado { get; set; } = false;
 
+    public bool EsFormal { get; set; } = false;
+    public string OrdenCompra { get; set; } = string.Empty;
+    public string Cotizacion { get; set; } = string.Empty;
+    public DateTime? FechaOrdenCompra { get; set; }
+
+    public string RncEmpresa { get; set; } = string.Empty;
+    public string RncProveedor { get; set; } = string.Empty;
+    public string RazonSocial { get; set; } = string.Empty;
+    public int AcuerdoPagoDias { get; set; } = 0;
+
+
     [Required(ErrorMessage = "Debe seleccionar un proveedor.")]
     public int ProveedorId { get; set; }
 
@@ -25,5 +36,6 @@ public class Entrada
     public Proveedores? Proveedor { get; set; }
 
     [ForeignKey("EntradaId")]
+
     public ICollection<EntradaDetalle> EntradaDetalles { get; set; } = new List<EntradaDetalle>();
 }
