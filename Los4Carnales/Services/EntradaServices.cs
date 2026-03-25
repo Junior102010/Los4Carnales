@@ -165,6 +165,8 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.EntradaDetalles
+       .Include(e => e.Entrada)
+       .ThenInclude(e => e.Proveedor)
        .Include(d => d.Producto)
        .ThenInclude(d => d.UnidadMedida)
        .Include(d => d.Producto)
