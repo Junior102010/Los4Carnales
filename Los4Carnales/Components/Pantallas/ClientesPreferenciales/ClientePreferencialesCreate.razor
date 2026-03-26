@@ -1,5 +1,173 @@
-﻿<h3>ClientePreferencialesCreate</h3>
+﻿@page "/Cliente/Create"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Los4Carnales.Data
+
+@inject ClientesServices clientesService
+@inject NavigationManager navigationManager
+
+@inject PageTitleService PageTitleService
+@inject UserManager<ApplicationUser> userManager
+
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Cleinte Preferencial</PageTitle>
+
+
+<div class="container">
+    <div class="card card-glass rounded-4 p-2">
+
+        <EditForm Model="cliente" OnValidSubmit="Guardar" FormName="CrearPedidoManual">
+            <DataAnnotationsValidator />
+
+            <div class="card-body">
+
+
+                <h6 class="fw-bold text-muted mb-3"><i class="bi bi-person-lines-fill"></i> Datos Generales</h6>
+                <div class="row mb-4">
+
+
+                    <div class="col-md-5">
+                        <label class="form-label text-muted small fw-bold mb-1">Nombre del Cliente</label>
+                        <div class="input-group">
+                            <InputText class="form-control  input-glass" @bind-Value="cliente.NombreCliente" placeholder="Introducir Nombre">
+                                
+                            </InputText>
+
+                            
+                        </div>
+                        <ValidationMessage For="(() => cliente.NombreCliente)" />
+                    </div>
+
+
+                    <div class="col-md-5">
+                    <label class="form-label text-muted small fw-bold mb-1">Apellido del Cliente</label>
+                    <div class="input-group">
+                        <InputText class="form-control  input-glass" @bind-Value="cliente.ApellidoCliente" placeholder="Introducir Apellido">
+
+                        </InputText>
+
+                    </div>
+                    <ValidationMessage For="(() => cliente.ApellidoCliente)" />
+                    </div>
+
+
+                    <div class="col-md-5 mt-3">
+                        <label class="form-label text-muted small fw-bold mb-1">Telefono</label>
+                        <div class="input-group">
+                            <InputText class="form-control  input-glass" @bind-Value="cliente.TelefonoCliente" placeholder="Ej: 809-809-0000">
+                            </InputText>
+
+                        </div>
+                        <ValidationMessage For="(() => cliente.TelefonoCliente)" />
+                    </div>
+@* 
+                    Aqui hay que hacerle un inputSelect para cuando se pongan deacuerdo con lo de logistica *@
+                    <div class="col-md-5 mt-3">
+                        <label class="form-label text-muted small fw-bold mb-1">Sector</label>
+                        <div class="input-group">
+                            <InputText class="form-control  input-glass" @bind-Value="cliente.Sector" placeholder="Introducir Sector">
+
+                            </InputText>
+
+                        </div>
+                        <ValidationMessage For="(() => cliente.Sector)" />
+                    </div>
+
+
+                    <div class="col-md-5 mt-3">
+                        <label class="form-label text-muted small fw-bold mb-1">Calle</label>
+                        <div class="input-group">
+                            <InputText class="form-control  input-glass" @bind-Value="cliente.CalleCliente" placeholder="Introducir Calle">
+
+                            </InputText>
+
+                        </div>
+                        <ValidationMessage For="(() => cliente.CalleCliente)" />
+                    </div>
+
+
+                    <div class="col-md-5 mt-3">
+                        <label class="form-label text-muted small fw-bold mb-1">Desc. Vivienda</label>
+                        <div class="input-group">
+                            <InputText class="form-control  input-glass" @bind-Value="cliente.ViviendaCliente" placeholder="Introducir Descripcion">
+
+                            </InputText>
+
+                        </div>
+                        <ValidationMessage For="(() => cliente.ViviendaCliente)" />
+                    </div>
+
+                    
+                </div>
+
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <label class="form-label text-muted small fw-bold mb-1">Descripcion de Cliente</label>
+                        <InputText class="form-control input-glass" @bind-Value="cliente.DescripcionCliente" placeholder="Introducir Descripcion" />
+                        <ValidationMessage For="(() => cliente.DescripcionCliente)" />
+                    </div>
+                </div>
+
+                <hr class="border-secondary opacity-25" />
+
+
+               
+
+                @if (!string.IsNullOrEmpty(Mensaje))
+                {
+                    <div class="alert alert-danger mt-3 text-center small" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill"></i> @Mensaje
+                    </div>
+                }
+            </div>
+
+            <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center mt-2 pt-0 pb-3 px-4">
+                <a href="/Abono/Index" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-arrow-left"></i> Volver
+                </a>
+                <button type="button" class="btn btn-gradiente px-5 py-2 shadow" @onclick="Guardar">
+                    <i class="bi bi-save"></i> Guardar Cliente
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
 
 @code {
+    [SupplyParameterFromForm]
+    public List<Cliente> ListaClientes { get; set; } = new List<Cliente>();
+    public Cliente cliente { get; set; } = new Cliente();
 
+    public string Mensaje { get; set; } = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Agregar Cliente");
+        ListaClientes = await clientesService.Listar(c => c.ClienteId > 0);
+    }
+
+    
+
+   
+
+    public async Task Guardar()
+    {
+
+
+        var guardado = await clientesService.Guardar(cliente);
+
+        if (guardado)
+        {
+
+
+            navigationManager.NavigateTo("/Abono/Index");
+        }
+        else
+        {
+            Mensaje = "Error al guardar.";
+        }
+    }
 }

@@ -35,15 +35,6 @@ public class ClientesServices(IDbContextFactory<ApplicationDbContext> DbFactory)
     public async Task<bool> Guardar(Cliente cliente)
     {
 
-        if (cliente.ClienteId == 0)
-        {
-            await using var contexto = await DbFactory.CreateDbContextAsync();
-            var existeTelefono = await contexto.Cliente
-                .AnyAsync(c => c.TelefonoCliente == cliente.TelefonoCliente);
-
-
-        }
-
         if (!await Existe(cliente.ClienteId))
             return await Insertar(cliente);
         else

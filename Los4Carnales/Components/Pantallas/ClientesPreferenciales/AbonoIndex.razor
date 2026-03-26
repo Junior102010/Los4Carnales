@@ -4,6 +4,7 @@
 
 
 @inject AbonosService abonosService
+@inject ClientesServices clientesServices
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
 
@@ -16,17 +17,15 @@
 
         <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
             <div>
-                <h4 class="fw-bold text-primary"><i class="bi bi-journal-text"></i> Cuentas por Cobrar (CXC)</h4>
-                <p class="text-muted small mb-0">Gestión de deudas empresariales</p>
+                <h4 class="fw-bold text-primary"><i class="bi bi-person"></i> Afiliados</h4>
+                <p class="text-muted small mb-0">Gestión de Clientes Preferenciales</p>
             </div>
-            <div class="text-end">
-                <h5 class="fw-bold text-danger m-0">Total en la Calle:</h5>
-                <span class="fs-5">RD$ @ListaDeudas.Sum(x => x.DeudaPendiente).ToString("N2")</span>
-            </div>
+           
         </div>
         <div class="row justify-content-end">
-            <a href="/Abono/Create" class="btn btn-success col-auto me-5">
-                Agregar Afiliado
+            <a href="/Cliente/Create" class="btn btn-success col-auto me-5">
+                <i class="bi bi-plus-square"></i> 
+                 Agregar Afiliado
             </a>
         </div>
 
@@ -37,14 +36,14 @@
             {
                 <div class="text-center py-5">
                     <div class="spinner-border text-primary" role="status"></div>
-                    <p class="mt-2 text-muted">Calculando deudas...</p>
+                    <p class="mt-2 text-muted">Cargando...</p>
                 </div>
             }
-            else if (!ListaDeudas.Any())
+            else if (!ListaClientes.Any())
             {
                 <div class="alert alert-success text-center shadow-sm">
-                    <i class="bi bi-check-circle-fill fs-4 d-block mb-2"></i>
-                    <strong>¡Excelente!</strong> No hay deudas pendientes en este momento.
+                    <i class="bi bi-exclamation-circle fs-4 d-block mb-2"></i>
+                    <strong>¡Que paso?!</strong> Ningun Afiliado por el Momento.
                 </div>
             }
             else
@@ -53,49 +52,39 @@
                     <table class="table table-hover bg-transparent align-middle mb-0">
                         <thead class="bg-light text-secondary">
                             <tr>
-                                <th class="ps-4">Cliente / Empresa</th>
-                                <th class="text-end">Límite / Total Comprado</th>
-                                <th class="text-end">Total Abonado</th>
-                                <th class="text-end fw-bold text-danger">Deuda Pendiente</th>
+                                <th class="ps-4">Nombre</th>
+                                <th class="text-end">Apellido</th>
+                                <th class="text-end">Telefono</th>
+                                <th class="text-end fw-bold text-danger">Sector</th>
                                 <th class="text-center">Acción</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var item in ListaDeudas)
+                            @foreach (var item in ListaClientes)
                             {
                                 <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
                                     <td class="ps-4">
-                                        <div class="fw-bold text-dark">@item.Cliente.NombreCliente</div>
-                                        <div class="small text-muted"><i class="bi bi-telephone"></i> @item.Cliente.TelefonoCliente</div>
+                                        <div class="fw-bold text-dark">@item.NombreCliente</div>
+                                    </td>
+
+                                    <td class="text-end fw-bold text-dark">
+                                        @item.ApellidoCliente
                                     </td>
 
                                     <td class="text-end text-muted">
-                                        @item.TotalCredito.ToString("N2")
+                                        @item.TelefonoCliente
                                     </td>
 
                                     <td class="text-end text-success">
-                                        @item.TotalPagado.ToString("N2")
-                                    </td>
-
-                                    <td class="text-end">
-                                        @if (item.DeudaPendiente > 0)
-                                        {
-                                            <span class="badge bg-danger bg-opacity-10 text-danger fs-6 px-3 border border-danger border-opacity-25">
-                                                RD$ @item.DeudaPendiente.ToString("N2")
-                                            </span>
-                                        }
-                                        else
-                                        {
-                                            <span class="badge bg-success text-white">Pagado</span>
-                                        }
+                                        @item.Sector
                                     </td>
 
                                     <td class="text-center">
-
-                                        <a href="/Abono/Create/@item.Cliente.ClienteId" class="btn btn-sm btn-outline-primary rounded-pill px-3 shadow-sm">
-                                            <i class="bi bi-cash-coin"></i> Abonar
-                                        </a>
+                                        <a href="/abono/Create" class="btn btn-sm btn-outline-success border-0 bi bi-pencil-square fs-5"></a>
                                     </td>
+                                    
+
+                                    
                                 </tr>
                             }
                         </tbody>
@@ -107,14 +96,14 @@
 </div>
 
 @code {
-    public List<ClienteDeudaDTO> ListaDeudas { get; set; } = new();
+    public List<Cliente> ListaClientes { get; set; } = new List<Cliente>();
     public bool Cargando { get; set; } = true;
 
     protected override async Task OnInitializedAsync()
     {
-        PageTitleService.SetTitle("Cuentas por Cobrar");
+        PageTitleService.SetTitle("Administracion de Afiliados");
 
-        ListaDeudas = await abonosService.ObtenerReporteDeudas();
+        ListaClientes = await clientesServices.Listar(p => p.ClienteId > 0);
         Cargando = false;
     }
 }
