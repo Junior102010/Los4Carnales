@@ -1,5 +1,6 @@
 ﻿@page "/Entrada/Index"
 @using Microsoft.AspNetCore.Authorization
+@using System.Linq.Expressions
 
 @rendermode InteractiveServer
 @inject EntradasServices entradasService
@@ -75,7 +76,7 @@
                         {
                             <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
                                 <td class="ps-3 fw-bold text-primary">@entrada.NumeroLote</td>
-                                <td>@entrada.FechaEntrada.ToShortDateString()</td>
+                                <td class="text-nowrap">@entrada.FechaEntrada.ToShortDateString()</td>
                                 <td>@(entrada.Proveedor?.Nombre ?? "Desconocido")</td>
                                 <td>@entrada.Concepto</td>
                                 <td class="text-center">
@@ -85,14 +86,13 @@
                                     }
                                     else
                                     {
-
                                         <span class="badge bg-secondary">Informal</span>
                                     }
                                 </td>
                                 <td class="text-center fw-bold" style="color: #3D5D35;">
                                     @entrada.EntradaDetalles.Sum(d => d.Cantidad)
                                 </td>
-                                <td class="text-center">
+                                <td class="text-center text-nowrap">
                                     <button type="button" class="btn btn-sm btn-outline-info border-0 bi bi-info-circle fs-5" title="Info Extra" @onclick="() => MostrarInfoExtra(entrada)"></button>
                                     <a href="/Entrada/Edit/@entrada.EntradaId" class="btn btn-sm btn-outline-success border-0 bi bi-eye fs-5" title="Ver Detalle"></a>
                                 </td>
@@ -109,12 +109,24 @@
             </div>
         </div>
 
-        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between text-muted mt-2 pt-0 pb-3 px-4">
-            <small class="fw-bold">Total de Entradas: @ListaEntradas.Count()</small>
+        @* --- FOOTER CON PAGINACIÓN --- *@
+        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center text-muted mt-2 pt-0 pb-3 px-4">
+            <small class="fw-bold">Total de Entradas: @TotalRegistros</small>
+
+            <div class="d-flex align-items-center gap-2">
+                <button class="btn btn-sm btn-outline-secondary" @onclick="PaginaAnterior" disabled="@(!PuedeRetroceder)">
+                    <span class="bi bi-chevron-left"></span> Anterior
+                </button>
+                <span class="small fw-bold text-dark mx-2">Página @PaginaActual de @TotalPaginas</span>
+                <button class="btn btn-sm btn-outline-secondary" @onclick="PaginaSiguiente" disabled="@(!PuedeAvanzar)">
+                    Siguiente <span class="bi bi-chevron-right"></span>
+                </button>
+            </div>
         </div>
+
         <div class="col-md-4 text-start p-2">
             <div class="d-flex justify-content-start gap-2">
-                <a href="/Almacen" class="btn btn-outline-secondary">
+                <a href="/Almacen" class="btn btn-outline-secondary border-0">
                     <span class="bi bi-arrow-left"></span> Volver
                 </a>
             </div>
@@ -124,47 +136,85 @@
 
 @code {
     public List<Entrada> ListaEntradas { get; set; } = new List<Entrada>();
+
+    // Variables de Búsqueda
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
     public DateTime? FechaInicio { get; set; }
     public DateTime? FechaFin { get; set; }
+
+    // Variables de Paginación
+    public int PaginaActual { get; set; } = 1;
+    public int RegistrosPorPagina { get; set; } = 8; // Muestra 8 registros por página
+    public int TotalRegistros { get; set; } = 0;
+
+    // Cálculos de Paginación
+    public int TotalPaginas => TotalRegistros == 0 ? 1 : (int)Math.Ceiling((double)TotalRegistros / RegistrosPorPagina);
+    public bool PuedeRetroceder => PaginaActual > 1;
+    public bool PuedeAvanzar => PaginaActual < TotalPaginas;
 
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.SetTitle("Entradas de Almacén");
         FechaInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         FechaFin = DateTime.Now;
-        await Restablecer();
+
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        // 1. Construir la consulta LINQ dinámicamente para que SQL Server haga el filtro
+        Expression<Func<Entrada, bool>> criterio = e =>
+            (!FechaInicio.HasValue || e.FechaEntrada.Date >= FechaInicio.Value.Date) &&
+            (!FechaFin.HasValue || e.FechaEntrada.Date <= FechaFin.Value.Date) &&
+            (string.IsNullOrWhiteSpace(ValorFiltro) ||
+                (Filtro == "Proveedor" && e.Proveedor != null && e.Proveedor.Nombre.ToLower().Contains(ValorFiltro.ToLower())) ||
+                (Filtro == "Concepto" && e.Concepto != null && e.Concepto.ToLower().Contains(ValorFiltro.ToLower())) ||
+                (Filtro == "Lote" && e.NumeroLote != null && e.NumeroLote.ToLower().Contains(ValorFiltro.ToLower()))
+            );
+
+        // 2. Obtener la cantidad total de registros que coinciden con el filtro (para calcular las páginas)
+        TotalRegistros = await entradasService.Contar(criterio);
+
+        // 3. Traer SÓLO los registros de la página actual
+        ListaEntradas = await entradasService.Listar(criterio, PaginaActual, RegistrosPorPagina);
     }
 
     private async Task Buscar()
     {
-        var lista = await entradasService.Listar(e => e.EntradaId > 0);
-
-        if (FechaInicio.HasValue)
-            lista = lista.Where(e => e.FechaEntrada.Date >= FechaInicio.Value.Date).ToList();
-
-        if (FechaFin.HasValue)
-            lista = lista.Where(e => e.FechaEntrada.Date <= FechaFin.Value.Date).ToList();
-
-        if (!string.IsNullOrWhiteSpace(ValorFiltro))
-        {
-            if (Filtro == "Proveedor")
-                lista = lista.Where(e => e.Proveedor != null && e.Proveedor.Nombre.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
-            else if (Filtro == "Concepto")
-                lista = lista.Where(e => e.Concepto != null && e.Concepto.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
-            else if (Filtro == "Lote")
-                lista = lista.Where(e => e.NumeroLote != null && e.NumeroLote.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase)).ToList();
-        }
-
-        ListaEntradas = lista;
+        PaginaActual = 1; // Al buscar, siempre volvemos a la página 1
+        await CargarDatos();
     }
 
     private async Task Restablecer()
     {
-        ListaEntradas = await entradasService.Listar(e => e.EntradaId > 0);
         Filtro = string.Empty;
         ValorFiltro = string.Empty;
+        FechaInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+        FechaFin = DateTime.Now;
+        PaginaActual = 1;
+
+        await CargarDatos();
+    }
+
+    // Navegación
+    private async Task PaginaAnterior()
+    {
+        if (PuedeRetroceder)
+        {
+            PaginaActual--;
+            await CargarDatos();
+        }
+    }
+
+    private async Task PaginaSiguiente()
+    {
+        if (PuedeAvanzar)
+        {
+            PaginaActual++;
+            await CargarDatos();
+        }
     }
 
     private async Task MostrarInfoExtra(Entrada entrada)
