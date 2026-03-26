@@ -1,0 +1,264 @@
+﻿@page "/Master/Productos/Vencidos"
+@using Los4Carnales.Models
+@using Los4Carnales.Services
+@using Los4Carnales.Components.Layout
+
+@layout MasterLayout
+
+@rendermode InteractiveServer
+@inject PageTitleService PageTitleService
+@inject EntradasServices entradasServices
+@inject NavigationManager navigationManager
+@inject IJSRuntime JS
+
+@attribute [Authorize(Roles = "Master")]
+
+<PageTitle>@PageTitleService.CurrentTitle</PageTitle>
+
+<div class="top-header-master">
+    @PageTitleService.CurrentTitle
+</div>
+
+<div class="content-body">
+    <div class="controls-bar">
+        <div class="d-flex gap-4">
+            <div>
+                <div class="filter-label">Filtrar por:</div>
+                <select class="input-custom" @bind="CriterioFiltro">
+                    <option value="Producto">Producto</option>
+                    <option value="Categoria">Categoría</option>
+                    <option value="Proveedor">Proveedor</option>
+                </select>
+            </div>
+
+            <div>
+                <div class="filter-label">Buscar</div>
+                <div class="d-flex gap-1">
+                    <input type="text" class="input-custom" placeholder="Escribe para buscar..."
+                           @bind="TextoBusqueda" @bind:event="oninput" style="width: 250px;">
+                    <button class="input-custom bg-white border"><i class="bi bi-search"></i></button>
+                </div>
+            </div>
+        </div>
+
+        <div class="badge-counter">
+            <i class="bi bi-arrow-counterclockwise"></i>
+            <div>
+                <div class="fs-4 fw-bold lh-1 text-dark">@ListaFiltrada.Count</div>
+                <small class="text-muted">Recuperables</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="big-card-container">
+        <div class="table-header">
+            <div style="width: 50px; text-align: center;">ID</div>
+            <div style="width: 30%;">Producto / Proveedor</div>
+            <div style="width: 15%; text-align: left; padding-left: 15px;">Categoría</div>
+            <div style="width: 15%; text-align: center;">Vencimiento</div>
+            <div style="width: 15%; text-align: center;">Cantidad</div>
+            <div style="width: 15%; text-align: center;">Estado</div>
+            <div style="width: 100px; text-align: center;">Opciones</div>
+        </div>
+
+        @if (ListaEntradasEliminadas.Count == 0)
+        {
+            <div class="d-flex flex-column align-items-center justify-content-center h-100 text-muted mt-5">
+                <i class="bi bi-inbox fs-1 mb-3"></i>
+                <h4>La papelera está vacía</h4>
+                <p>No hay entradas vencidas eliminadas recientemente.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in ListaFiltrada)
+            {
+                <div class="data-row">
+                    <div class="col-id" style="width: 50px; text-align: center;">@item.DetalleId</div>
+
+                    <div class="col-name" style="width: 30%;">
+                        <div class="fw-bold text-dark">@(item.Producto?.NombreProducto ?? "Sin Nombre")</div>
+                        <small class="text-muted"><i class="bi bi-truck"></i> @(item.Entrada?.Proveedor?.Nombre ?? "Sin Proveedor")</small>
+                    </div>
+
+                    <div style="width: 15%; text-align: left; padding-left: 15px;">
+                        <span class="badge bg-light text-secondary border">@(item.Producto?.Categoria?.Nombre ?? "Sin Categoría")</span>
+                    </div>
+
+                    <div style="width: 15%; text-align: center;">
+                        <span class="fw-bold text-danger">@item.FechaVencimiento.ToString("dd/MM/yyyy")</span>
+                    </div>
+
+                    <div style="width: 15%; text-align: center;">
+                        <span class="fw-bold text-dark">@item.Cantidad</span>
+                        <small class="text-muted">@(item.Producto?.UnidadMedida)</small>
+                    </div>
+
+                    <div class="col-status text-danger fw-bold" style="width: 15%; text-align: center;">
+                        <i class="bi bi-x-circle"></i> Oculto
+                    </div>
+
+                    <div class="col-actions" style="width: 100px; justify-content: center;">
+                        <button class="action-btn btn-view" title="Ver toda la información"
+                                @onclick="() => MostrarDetalles(item)">
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+
+                        <button class="action-btn btn-restore" title="Restaurar a la lista de vencidos"
+                                @onclick="() => Restaurar(item)">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </button>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@* --- MODAL DE DETALLES --- *@
+@if (ModalVisible && Seleccionado != null)
+{
+    <div class="custom-modal-backdrop" @onclick="CerrarModal">
+        <div class="custom-modal-content" @onclick:stopPropagation="true">
+
+            <div class="modal-header-custom">
+                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-box-seam me-2"></i> Detalles de Entrada Vencida</h5>
+                <button class="action-btn text-muted" @onclick="CerrarModal"><i class="bi bi-x-lg"></i></button>
+            </div>
+
+            <div class="modal-body-custom mt-3">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">ID Detalle</small>
+                        <p class="fs-5 mb-0 fw-bold text-dark">#@Seleccionado.DetalleId</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted fw-bold">Estado en Sistema</small>
+                        <p class="mb-0 text-danger fw-bold">Eliminado / Oculto</p>
+                    </div>
+                </div>
+
+                <hr class="opacity-25" />
+
+                <div class="row mb-3">
+                    <div class="col-12 mb-2">
+                        <small class="text-muted fw-bold">Nombre del Producto</small>
+                        <p class="mb-0 text-dark">@(Seleccionado.Producto?.NombreProducto)</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">Proveedor</small>
+                        <p class="mb-0 text-dark">@(Seleccionado.Entrada?.Proveedor?.Nombre)</p>
+                    </div>
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">Categoría</small>
+                        <p class="mb-0 text-dark">@(Seleccionado.Producto?.Categoria?.Nombre)</p>
+                    </div>
+                </div>
+
+                <hr class="opacity-25" />
+
+                <div class="row mb-3">
+                    <div class="col-4">
+                        <small class="text-muted fw-bold">Fecha Entrada</small>
+                        <p class="mb-0 text-dark fw-bold">@(Seleccionado.Entrada?.FechaEntrada.ToString("dd/MM/yyyy"))</p>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted fw-bold">Fecha Vencimiento</small>
+                        <p class="mb-0 text-danger fw-bold">@Seleccionado.FechaVencimiento.ToString("dd/MM/yyyy")</p>
+                    </div>
+                    <div class="col-4">
+                        <small class="text-muted fw-bold">Cantidad</small>
+                        <p class="mb-0 text-success fw-bold">@Seleccionado.Cantidad</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer-custom mt-4 text-end">
+                <button class="btn btn-secondary px-4 rounded-pill" @onclick="CerrarModal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    public List<EntradaDetalle> ListaEntradasEliminadas { get; set; } = new List<EntradaDetalle>();
+
+    public string TextoBusqueda { get; set; } = "";
+    public string CriterioFiltro { get; set; } = "Producto";
+
+    // Variables para el Modal
+    public bool ModalVisible { get; set; } = false;
+    public EntradaDetalle? Seleccionado { get; set; }
+
+    public List<EntradaDetalle> ListaFiltrada
+    {
+        get
+        {
+            if (string.IsNullOrWhiteSpace(TextoBusqueda))
+                return ListaEntradasEliminadas;
+
+            switch (CriterioFiltro)
+            {
+                case "Categoria":
+                    return ListaEntradasEliminadas.Where(p => p.Producto?.Categoria?.Nombre != null &&
+                                                              p.Producto.Categoria.Nombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+                case "Proveedor":
+                    return ListaEntradasEliminadas.Where(p => p.Entrada?.Proveedor?.Nombre != null &&
+                                                              p.Entrada.Proveedor.Nombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+                default: // Producto
+                    return ListaEntradasEliminadas.Where(p => p.Producto?.NombreProducto != null &&
+                                                              p.Producto.NombreProducto.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+            }
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Papelera de Vencidos");
+        await CargarDatos();
+    }
+
+    private async Task CargarDatos()
+    {
+        var todasLasEntradas = await entradasServices.ListarEntradasVencidas();
+
+        // Filtramos solo las que están vencidas y fueron marcadas para no mostrarse
+        ListaEntradasEliminadas = todasLasEntradas
+            .Where(e => e.FechaVencimiento <= DateTime.Now && e.MostrarVencimiento == false)
+            .ToList();
+    }
+
+    private void MostrarDetalles(EntradaDetalle detalle)
+    {
+        Seleccionado = detalle;
+        ModalVisible = true;
+    }
+
+    private void CerrarModal()
+    {
+        ModalVisible = false;
+        Seleccionado = null;
+    }
+
+    private async Task Restaurar(EntradaDetalle detalle)
+    {
+        bool confirmar = await JS.InvokeAsync<bool>("confirm", "¿Deseas restaurar este registro? Volverá a aparecer en la lista de vencidos y su inventario se sumará nuevamente si fue descontado.");
+
+        if (confirmar)
+        {
+            // Volvemos a mostrar la entrada en la lista principal de vencidos
+            detalle.MostrarVencimiento = true;
+
+            // Si se le había restado del inventario, lo sumamos de nuevo (true)
+            if (detalle.SeDescontoExistencia)
+            {
+                await entradasServices.AfectarExistenciaProducto(detalle.ProductoId, true, detalle.Cantidad);
+                detalle.SeDescontoExistencia = false;
+            }
+
+            await entradasServices.Actualizar(detalle);
+
+            await CargarDatos();
+        }
+    }
+}

@@ -1,15 +1,20 @@
 ﻿@page "/Producto/Edit/{ProductoId:int}"
 @using Microsoft.AspNetCore.Authorization
+@using Los4Carnales.Models
+@using Los4Carnales.Services
 
 @rendermode InteractiveServer
 
 @inject ProductosServices productosService
+@inject CategoriaService categoriaService
+@inject UnidadMedidaService unidadService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
 
 @attribute [Authorize(Roles = "Administrador")]
 
 <PageTitle>Editar Producto</PageTitle>
+
 <div class="container">
     <div class="card card-glass rounded-4 p-2">
 
@@ -18,7 +23,6 @@
 
             <div class="card-body">
 
-                @* --- FILA 1: DATOS BÁSICOS (Ajustado a 3 columnas para incluir la Etiqueta) --- *@
                 <div class="row mb-4">
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Nombre</label>
@@ -28,23 +32,23 @@
 
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Categoría</label>
-                        <InputSelect class="form-select input-glass" @bind-Value="Producto.Categoria">
-                            <option value="" selected disabled>Seleccione...</option>
-                            <option value="Carnes">Carnes</option>
-                            <option value="Granos">Granos</option>
-                            <option value="Verduras">Verduras</option>
-                            <option value="Vegetales">Vegetales</option>
-                            <option value="Ensaladas">Ensaladas</option>
-                            <option value="Frutas">Frutas</option>
-                            <option value="Sazones">Sazones</option>
-                            <option value="Víveres">Víveres</option>
-                        </InputSelect>
-                        <ValidationMessage For="(() => Producto.Categoria)" />
+                        <div class="input-group">
+                            <InputSelect class="form-select input-glass" @bind-Value="Producto.CategoriaId">
+                                <option value="0" disabled>Seleccione...</option>
+                                @foreach (var c in ListaCategorias)
+                                {
+                                    <option value="@c.CategoriaId">@c.Nombre</option>
+                                }
+                            </InputSelect>
+                            <a href="/Logistica/Categorias" class="btn btn-outline-secondary">
+                                <i class="bi bi-gear"></i>
+                            </a>
+                        </div>
+                        <ValidationMessage For="(() => Producto.CategoriaId)" />
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Etiqueta</label>
-                        @* Readonly para garantizar que NO se pueda editar *@
                         <InputText class="form-control input-glass text-primary fw-bold"
                                    @bind-Value="Producto.Etiqueta"
                                    readonly />
@@ -52,9 +56,7 @@
                     </div>
                 </div>
 
-
                 <div class="row mb-3">
-
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Costo (Compra)</label>
                         <div class="input-group">
@@ -65,7 +67,7 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label text-muted small fw-bold mb-1">Precio (Venta)</label>
+                        <label class="form-label text-muted small fw-bold mb-1">Precio (Venta Público)</label>
                         <div class="input-group">
                             <span class="input-group-text bg-transparent border-end-0 text-muted">$</span>
                             <InputNumber class="form-control input-glass border-start-0" @bind-Value="Producto.Precio" />
@@ -74,7 +76,7 @@
                     </div>
 
                     <div class="col-md-4 d-flex flex-column justify-content-end pb-2">
-                        <span class="small text-muted">Margen estimado:</span>
+                        <span class="small text-muted">Margen estimado (Público):</span>
                         <h5 class="m-0 @(ObtenerColorGanancia())">
                             @((Producto.Precio - Producto.Costo).ToString("C2"))
                         </h5>
@@ -87,18 +89,35 @@
 
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Unidad de Medida</label>
-                        <InputSelect class="form-select input-glass" @bind-Value="Producto.UnidadMedida">
-                            <option value="Libra">Libra (LB)</option>
-                            <option value="Kilogramo">Kilogramo (KG)</option>
-                  
-                        </InputSelect>
+                        <div class="input-group">
+                            <InputSelect class="form-select input-glass" @bind-Value="Producto.UnidadMedidaId">
+                                <option value="0" disabled>Seleccione...</option>
+                                @foreach (var u in ListaUnidades)
+                                {
+                                    <option value="@u.UnidadId">@u.Descripcion (@u.Abreviatura)</option>
+                                }
+                            </InputSelect>
+                            <a href="/Logistica/Unidades" class="btn btn-outline-secondary">
+                                <i class="bi bi-gear"></i>
+                            </a>
+                        </div>
+                        <ValidationMessage For="(() => Producto.UnidadMedidaId)" />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label text-muted small fw-bold mb-1">Precio (Venta Empresa)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0 text-muted">$</span>
+                            <InputNumber class="form-control input-glass border-start-0" @bind-Value="Producto.PrecioEmpresa" />
+                        </div>
+                        <ValidationMessage For="(() => Producto.PrecioEmpresa)" />
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label text-muted small fw-bold mb-1">Existencia Actual</label>
                         @if (Producto.Existencia < 1)
                         {
-                            <InputText class="form-control input-glass fw-bold" style="color: #3D5D35;" placeholder="Aún no existen entradas." @bind-Value="AvisoSinEntradas" disabled/>
+                            <InputText class="form-control input-glass fw-bold" style="color: #3D5D35;" placeholder="Aún no existen entradas." @bind-Value="AvisoSinEntradas" disabled />
                         }
                         else
                         {
@@ -107,7 +126,6 @@
                                 <i class="bi bi-exclamation-triangle"></i> Ajustar solo por daños o errores.
                             </div>
                         }
-
                     </div>
                 </div>
 
@@ -118,7 +136,6 @@
                     </div>
                 }
             </div>
-
 
             <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center mt-2 pt-0 pb-3 px-4">
                 <a href="/Almacen" class="btn btn-outline-secondary px-4">
@@ -147,10 +164,17 @@
     public string Mensaje { get; set; } = string.Empty;
     public string AvisoSinEntradas { get; set; } = string.Empty;
 
+    public List<Categorias> ListaCategorias { get; set; } = new();
+    public List<UnidadMedida> ListaUnidades { get; set; } = new();
+
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.SetTitle("Editar Producto");
-        if (Producto.ProductoId == 0)
+
+        ListaCategorias = await categoriaService.Listar(_ => true);
+        ListaUnidades = await unidadService.Listar(_ => true);
+
+        if (ProductoId > 0)
         {
             var encontrado = await productosService.Buscar(ProductoId);
             if (encontrado != null)
@@ -162,7 +186,6 @@
                 Mensaje = "El producto no fue encontrado.";
             }
         }
-        Console.WriteLine(Producto.UnidadMedida);
     }
 
     public async Task Eliminar()
@@ -179,12 +202,18 @@
     {
         Mensaje = string.Empty;
 
-        // Validaciones básicas
-        if (Producto.Costo < 0 || Producto.Precio < 0)
+        if (Producto.CategoriaId <= 0 || Producto.UnidadMedidaId <= 0)
+        {
+            Mensaje = "Debe seleccionar una Categoría y una Unidad de Medida.";
+            return;
+        }
+
+        if (Producto.Costo < 0 || Producto.Precio < 0 || Producto.PrecioEmpresa < 0)
         {
             Mensaje = "Los valores monetarios no pueden ser negativos.";
             return;
         }
+
         if (Producto.Existencia < 0)
         {
             Mensaje = "La existencia no puede ser negativa.";

@@ -209,7 +209,7 @@
                 case "Etiqueta":
                     return ListaProductos.Where(p => p.Etiqueta != null && p.Etiqueta.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
                 case "Categoria":
-                    return ListaProductos.Where(p => p.Categoria != null && p.Categoria.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
+                    return ListaProductos.Where(p => p.Categoria != null && p.Categoria.Nombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
                 default:
                     return ListaProductos.Where(p => p.NombreProducto != null && p.NombreProducto.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList();
             }

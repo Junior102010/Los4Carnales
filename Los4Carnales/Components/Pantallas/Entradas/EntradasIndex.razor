@@ -5,6 +5,7 @@
 @inject EntradasServices entradasService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
+@inject SweetAlertService Swal
 
 @attribute [Authorize(Roles = "Administrador")]
 
@@ -56,7 +57,6 @@
                 </div>
             </div>
 
-            @* --- TABLA LIMPIA (SIN ID) --- *@
             <div class="table-responsive">
                 <table class="table table-hover bg-transparent align-middle">
                     <thead class="text-black" style="background-color: rgba(0,0,0,0.03); border-bottom: 2px solid rgba(0,0,0,0.1);">
@@ -65,6 +65,7 @@
                             <th class="py-3">Fecha</th>
                             <th class="py-3">Proveedor</th>
                             <th class="py-3">Concepto</th>
+                            <th class="py-3 text-center">Tipo</th>
                             <th class="py-3 text-center">Total Items</th>
                             <th class="py-3 text-center">Opciones</th>
                         </tr>
@@ -77,10 +78,22 @@
                                 <td>@entrada.FechaEntrada.ToShortDateString()</td>
                                 <td>@(entrada.Proveedor?.Nombre ?? "Desconocido")</td>
                                 <td>@entrada.Concepto</td>
+                                <td class="text-center">
+                                    @if (entrada.EsFormal)
+                                    {
+                                        <span class="badge bg-primary">Formal</span>
+                                    }
+                                    else
+                                    {
+
+                                        <span class="badge bg-secondary">Informal</span>
+                                    }
+                                </td>
                                 <td class="text-center fw-bold" style="color: #3D5D35;">
                                     @entrada.EntradaDetalles.Sum(d => d.Cantidad)
                                 </td>
                                 <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-outline-info border-0 bi bi-info-circle fs-5" title="Info Extra" @onclick="() => MostrarInfoExtra(entrada)"></button>
                                     <a href="/Entrada/Edit/@entrada.EntradaId" class="btn btn-sm btn-outline-success border-0 bi bi-eye fs-5" title="Ver Detalle"></a>
                                 </td>
                             </tr>
@@ -88,7 +101,7 @@
                         @if (!ListaEntradas.Any())
                         {
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">No se encontraron entradas.</td>
+                                <td colspan="7" class="text-center text-muted py-4">No se encontraron entradas.</td>
                             </tr>
                         }
                     </tbody>
@@ -99,15 +112,20 @@
         <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between text-muted mt-2 pt-0 pb-3 px-4">
             <small class="fw-bold">Total de Entradas: @ListaEntradas.Count()</small>
         </div>
+        <div class="col-md-4 text-start p-2">
+            <div class="d-flex justify-content-start gap-2">
+                <a href="/Almacen" class="btn btn-outline-secondary">
+                    <span class="bi bi-arrow-left"></span> Volver
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
 @code {
     public List<Entrada> ListaEntradas { get; set; } = new List<Entrada>();
-
     public string Filtro { get; set; } = string.Empty;
     public string ValorFiltro { get; set; } = string.Empty;
-
     public DateTime? FechaInicio { get; set; }
     public DateTime? FechaFin { get; set; }
 
@@ -116,7 +134,6 @@
         PageTitleService.SetTitle("Entradas de Almacén");
         FechaInicio = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
         FechaFin = DateTime.Now;
-
         await Restablecer();
     }
 
@@ -148,5 +165,25 @@
         ListaEntradas = await entradasService.Listar(e => e.EntradaId > 0);
         Filtro = string.Empty;
         ValorFiltro = string.Empty;
+    }
+
+    private async Task MostrarInfoExtra(Entrada entrada)
+    {
+        string htmlInfo = entrada.EsFormal
+            ? $"<div class='text-start'><p><b>Orden de Compra:</b> {(string.IsNullOrEmpty(entrada.OrdenCompra) ? "N/A" : entrada.OrdenCompra)}</p>" +
+              $"<p><b>Cotización:</b> {(string.IsNullOrEmpty(entrada.Cotizacion) ? "N/A" : entrada.Cotizacion)}</p>" +
+              $"<p><b>Fecha de Orden:</b> {(entrada.FechaOrdenCompra.HasValue ? entrada.FechaOrdenCompra.Value.ToShortDateString() : "N/A")}</p>" +
+              $"<p><b>Razón Social:</b> {entrada.RazonSocial}</p>" +
+              $"<p><b>RNC Empresa:</b> {entrada.RncEmpresa}</p>" +
+              $"<p><b>RNC Proveedor:</b> {entrada.RncProveedor}</p>" +
+              $"<p><b>Acuerdo de Pago:</b> {entrada.AcuerdoPagoDias} Días</p></div>"
+            : $"<div class='text-center'><p><b>Orden de Compra:</b> {(string.IsNullOrEmpty(entrada.OrdenCompra) ? "N/A" : entrada.OrdenCompra)}</p><span class='badge bg-secondary'>Entrada Informal</span></div>";
+
+        await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = $"Detalle Extra (Lote: {entrada.NumeroLote})",
+            Html = htmlInfo,
+            Icon = SweetAlertIcon.Info
+        });
     }
 }

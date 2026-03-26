@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Los4Carnales.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260312231725_NuevaDatabase")]
-    partial class NuevaDatabase
+    [Migration("20260322024420_AddFechaVencimientoEntradaDetalle")]
+    partial class AddFechaVencimientoEntradaDetalle
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -169,6 +169,9 @@ namespace Los4Carnales.Migrations
                     b.Property<int>("EntradaId")
                         .HasColumnType("int");
 
+                    b.Property<DateTime>("FechaVencimiento")
+                        .HasColumnType("datetime2");
+
                     b.Property<int>("ProductoId")
                         .HasColumnType("int");
 
@@ -295,9 +298,8 @@ namespace Los4Carnales.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductoId"));
 
-                    b.Property<string>("Categoria")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("CategoriaId")
+                        .HasColumnType("int");
 
                     b.Property<double>("Costo")
                         .HasColumnType("float");
@@ -322,11 +324,14 @@ namespace Los4Carnales.Migrations
                     b.Property<double>("PrecioEmpresa")
                         .HasColumnType("float");
 
-                    b.Property<string>("UnidadMedida")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("UnidadMedidaId")
+                        .HasColumnType("int");
 
                     b.HasKey("ProductoId");
+
+                    b.HasIndex("CategoriaId");
+
+                    b.HasIndex("UnidadMedidaId");
 
                     b.ToTable("Producto");
                 });
@@ -708,6 +713,25 @@ namespace Los4Carnales.Migrations
                         .HasForeignKey("ProductoId");
 
                     b.Navigation("Producto");
+                });
+
+            modelBuilder.Entity("Los4Carnales.Models.Producto", b =>
+                {
+                    b.HasOne("Los4Carnales.Models.Categorias", "Categoria")
+                        .WithMany()
+                        .HasForeignKey("CategoriaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Los4Carnales.Models.UnidadMedida", "UnidadMedida")
+                        .WithMany()
+                        .HasForeignKey("UnidadMedidaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Categoria");
+
+                    b.Navigation("UnidadMedida");
                 });
 
             modelBuilder.Entity("Los4Carnales.Models.Transferencia", b =>
