@@ -241,4 +241,26 @@ public class EntradasServices(IDbContextFactory<ApplicationDbContext> DbFactory)
             .Where(e => e.EntradaId == id)
             .ExecuteDeleteAsync() > 0;
     }
+
+    //Nueva idea
+    public async Task<List<Entrada>> Listar(Expression<Func<Entrada, bool>> criterio, int numeroPagina = 1, int registrosPorPagina = 10)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Entrada
+            .Include(e => e.Proveedor)
+            .Include(e => e.EntradaDetalles)
+            .Where(criterio)
+            .AsNoTracking()
+            .Skip((numeroPagina - 1) * registrosPorPagina)
+            .Take(registrosPorPagina)
+            .ToListAsync();
+    }
+
+    public async Task<int> Contar(Expression<Func<Entrada, bool>> criterio)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Entrada
+            .Where(criterio)
+            .CountAsync();
+    }
 }
