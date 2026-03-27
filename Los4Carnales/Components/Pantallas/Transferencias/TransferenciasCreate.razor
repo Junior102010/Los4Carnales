@@ -147,7 +147,11 @@
 
     private async Task GuardarTransferenciaCompleta()
     {
-        if (NuevaTransferencia.ClienteId <= 0) return;
+        if (NuevaTransferencia.ClienteId <= 0)
+        {
+            await Swal.FireAsync("Error", "Debes seleccionar un cliente.", SweetAlertIcon.Error);
+            return;
+        }
 
         // Gestión de archivos
         string uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "TransferenciaUploads");
