@@ -1,0 +1,133 @@
+﻿@page "/transferencia/ver/{TransferenciaId:int}"
+
+
+@rendermode InteractiveServer
+@inject NavigationManager NavigationManager
+@inject TranferenciaServices TransferenciaService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Detalle de Transferencia</PageTitle>
+
+<div class="container mt-4">
+    @if (transferencia == null)
+    {
+        <div class="alert alert-info">
+            <div class="spinner-border spinner-border-sm me-2"></div> Cargando información de la transferencia...
+        </div>
+    }
+    else
+    {
+        <div class="card card-glass rounded-4 p-4 shadow-lg">
+            <div class="card-header bg-transparent border-bottom-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h3 class="fw-bold text-primary"><i class="bi bi-eye"></i> Detalle de Transferencia</h3>
+                        <p class="text-muted">Consulta los datos del pago registrado.</p>
+                    </div>
+                    <span class="badge bg-secondary fs-6">ID: @transferencia.TransferenciaId</span>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <div class="row">
+                    @* Bancos *@
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted">Origen</label>
+                        <p class="fs-5"><i class="bi bi-box-arrow-right text-danger"></i> @transferencia.Origen</p>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted">Destino</label>
+                        <p class="fs-5"><i class="bi bi-box-arrow-in-left text-success"></i> @transferencia.Destino</p>
+                    </div>
+
+                    @* Monto y Fecha *@
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted">Monto Transferido</label>
+                        <p class="fs-4 fw-bold text-dark">@transferencia.Monto.ToString("C2")</p>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold text-muted">Fecha de Registro</label>
+                        <p class="fs-5">@transferencia.Fecha.ToShortDateString()</p>
+                    </div>
+
+                    @* Observaciones *@
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label fw-bold text-muted">Observaciones</label>
+                        <div class="p-3 bg-light rounded border">
+                            @(string.IsNullOrEmpty(transferencia.Observaciones) ? "Sin observaciones." : transferencia.Observaciones)
+                        </div>
+                    </div>
+                </div>
+
+                <hr />
+
+
+                <div class="mb-4">
+                    <h5 class="fw-bold text-primary"><i class="bi bi-images"></i> Comprobante(s) Adjunto(s)</h5>
+
+                    @if (transferencia.Imagenes != null && transferencia.Imagenes.Any())
+                    {
+                        <div class="row g-3">
+                            @foreach (var imagen in transferencia.Imagenes)
+                            {
+                                <div class="col-md-4 col-sm-6">
+                                    <div class="card h-100 shadow-sm border-0">
+                                       
+                                        
+                                        <a href="@imagen.RutaImagen" target="_blank" title="Clic para ver en tamaño completo">
+                                            <img src="@imagen.RutaImagen"
+                                                 class="card-img-top img-fluid rounded"
+                                                 style="object-fit: cover; height: 200px;"
+                                                 alt="Comprobante de pago" />
+                                        </a>
+                                        <div class="card-footer bg-white border-0 text-center">
+                                            <small class="text-muted"><i class="bi bi-zoom-in"></i> Clic para ampliar</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning text-center">
+                            <i class="bi bi-exclamation-triangle"></i> No hay comprobantes adjuntos para esta transferencia.
+                        </div>
+                    }
+                </div>
+
+                
+                <div class="d-flex justify-content-start mt-4">
+                    <button class="btn btn-outline-secondary px-4" @onclick="Volver">
+                        <i class="bi bi-arrow-left"></i> Volver al listado
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public int TransferenciaId { get; set; }
+
+    public Transferencia? transferencia { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        transferencia = await TransferenciaService.Buscar(TransferenciaId);
+
+        if (transferencia == null)
+        {
+            NavigationManager.NavigateTo("/Pedido/Index");
+        }
+    }
+
+    private void Volver()
+    {
+        NavigationManager.NavigateTo("/Transferencia/Index");
+    }
+}

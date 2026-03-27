@@ -1,0 +1,147 @@
+﻿@page "/Transferencia/Index"
+
+@inject TranferenciaServices TransferenciaService
+@inject PageTitleService PageTitleService
+@inject NavigationManager navigationManager
+@rendermode InteractiveServer
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Registro de Transferencias</PageTitle>
+
+<div class="container">
+    <div class="card card-glass rounded-4 p-2">
+        <div class="card-body">
+
+            @* --- Sección de Cabecera y Filtros --- *@
+            <div class="row align-items-end mb-4">
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Desde</label>
+                    <InputDate class="form-control input-glass" @bind-Value="FechaInicio" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label text-muted small fw-bold mb-1">Hasta</label>
+                    <InputDate class="form-control input-glass" @bind-Value="FechaFin" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label text-muted small fw-bold mb-1">Buscar (Origen, Destino, Observaciones)</label>
+                    <div class="input-group">
+                        <input class="form-control input-glass" @bind="ValorFiltro" placeholder="Escribe cuenta o detalle..." />
+                        <button type="button" class="btn btn-outline-success bi bi-search" @onclick="Buscar"></button>
+                        <button type="button" class="btn btn-outline-secondary bi bi-arrow-counterclockwise" @onclick="Restablecer" title="Limpiar"></button>
+                    </div>
+                </div>
+                <div class="col-md-2 text-end">
+                    <a href="/Transferencia/Create" class="btn btn-success w-100">
+                        <span class="bi bi-plus-square"></span> Nueva
+                    </a>
+                </div>
+            </div>
+
+            @* --- Tabla de Datos --- *@
+            <div class="table-responsive">
+                <table class="table table-hover bg-transparent align-middle">
+                    <thead class="text-black" style="background-color: rgba(0,0,0,0.03); border-bottom: 2px solid rgba(0,0,0,0.1);">
+                        <tr>
+                            <th class="ps-3">#ID</th>
+                            <th>Fecha</th>
+                            <th>Origen</th>
+                            <th>Destino</th>
+                            <th class="text-end">Monto</th>
+                            <th class="text-center">Comprobantes</th>
+                            <th class="text-center">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody style="background-color: transparent;">
+                        @foreach (var transferencia in ListaTransferencias)
+                        {
+                            <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                <td class="ps-3 fw-bold text-muted">@transferencia.TransferenciaId</td>
+                                <td>
+                                    <div class="d-flex flex-column">
+                                        <span class="fw-bold">@transferencia.Fecha.ToShortDateString()</span>
+                                        <small class="text-muted" style="font-size: 0.75rem;">@transferencia.Fecha.ToShortTimeString()</small>
+                                    </div>
+                                </td>
+                                <td>@transferencia.Origen</td>
+                                <td>@transferencia.Destino</td>
+                                <td class="text-end fw-bold" style="color: #3D5D35;">@transferencia.Monto.ToString("N2")</td>
+                                <td class="text-center">
+                                    <span class="badge @(transferencia.Imagenes.Count > 0 ? "bg-success" : "bg-danger")">
+                                        @transferencia.Imagenes.Count
+                                    </span>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group">
+                                        <a href="/transferencia/ver/@transferencia.TransferenciaId" class="btn btn-sm btn-outline-primary bi bi-eye" title="Ver"></a>
+                                        <a href="/Transferencia/Edit/@transferencia.TransferenciaId" class="btn btn-sm btn-outline-warning bi bi-pencil-square" title="Editar"></a>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                        @if (!ListaTransferencias.Any())
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="bi bi-bank2 fs-1 d-block mb-2"></i>
+                                    No hay transferencias registradas.
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        @* --- Footer con Totales --- *@
+        <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between text-muted mt-2 pt-0 pb-3 px-4">
+            <small class="fw-bold">Cantidad: @ListaTransferencias.Count</small>
+            <small class="fw-bold fs-6">Monto Total: <span style="color: #3D5D35;">@ListaTransferencias.Sum(t => t.Monto).ToString("C2")</span></small>
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Transferencia> ListaTransferencias { get; set; } = new List<Transferencia>();
+    public string ValorFiltro { get; set; } = string.Empty;
+    public DateTime? FechaInicio { get; set; }
+    public DateTime? FechaFin { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Registro de Transferencias");
+        FechaInicio = DateTime.Now.AddDays(-30);
+        FechaFin = DateTime.Now;
+        ListaTransferencias = await TransferenciaService.Listar(t => t.TransferenciaId > 0 && !t.Eliminado);
+    }
+
+    private async Task Buscar()
+    {
+        // Se listan todas las transferencias sin filtrar por ClienteId
+        var lista = await TransferenciaService.Listar(t => t.TransferenciaId > 0);
+
+        if (FechaInicio.HasValue)
+            lista = lista.Where(t => t.Fecha.Date >= FechaInicio.Value.Date).ToList(); 
+        if (FechaFin.HasValue)
+            lista = lista.Where(t => t.Fecha.Date <= FechaFin.Value.Date).ToList(); 
+
+        if (!string.IsNullOrWhiteSpace(ValorFiltro))
+        {
+            lista = lista.Where(t =>
+                t.Origen.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase) ||
+                t.Destino.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase) ||
+                (t.Observaciones != null && t.Observaciones.Contains(ValorFiltro, StringComparison.OrdinalIgnoreCase))
+            ).ToList(); 
+        }
+
+        ListaTransferencias = lista;
+    }
+
+    private async Task Restablecer()
+    {
+        ValorFiltro = string.Empty; 
+        FechaInicio = DateTime.Now.AddDays(-30); 
+        FechaFin = DateTime.Now;
+        await Buscar();
+    }
+}

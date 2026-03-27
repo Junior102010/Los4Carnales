@@ -1,0 +1,226 @@
+﻿@page "/Transferencia/Create"
+@page "/Transferencia/Edit/{TransferenciaId:int}"
+
+@using Microsoft.AspNetCore.Identity
+@using Los4Carnales.Data
+
+@inject UserManager<ApplicationUser> UserManager
+@inject SweetAlertService Swal
+@inject IWebHostEnvironment WebHostEnvironment
+@inject NavigationManager NavigationManager
+@inject TranferenciaServices TransferenciaService
+@inject PedidosServices pedidosServices
+@inject ClientesServices clienteServices
+@inject AuthenticationStateProvider AuthStateProvider
+
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>@Titulo Registro de Transferencia</PageTitle>
+
+<div class="container mt-4">
+    <div class="card card-glass rounded-4 p-4 shadow-lg">
+        <div class="card-header bg-transparent border-bottom-0">
+            <h3 class="fw-bold text-primary"><i class="bi bi-bank"></i> @Titulo Transferencia</h3>
+            <p class="text-muted">Gestión administrativa de depósitos y comprobantes.</p>
+        </div>
+
+        <EditForm Model="NuevaTransferencia" OnValidSubmit="GuardarTransferenciaCompleta">
+            <DataAnnotationsValidator />
+
+            <div class="row">
+                @* Selección de Cliente *@
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
+                    <InputSelect class="form-select" @bind-Value="NuevaTransferencia.ClienteId">
+                        <option value="0">-- Seleccione un Cliente --</option>
+                        @foreach (var c in ListaClientes)
+                        {
+                            <option value="@c.ClienteId">@c.NombreCliente @c.ApellidoCliente</option>
+                        }
+                    </InputSelect>
+                    <ValidationMessage For="(() => NuevaTransferencia.ClienteId)" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Banco Origen <span class="text-danger">*</span></label>
+                    <InputSelect class="form-select" @bind-Value="NuevaTransferencia.Origen">
+                        <option value="">-- Seleccione --</option>
+                        <option value="Banreservas">Banreservas</option>
+                        <option value="Popular">Popular</option>
+                        <option value="BHD">BHD</option>
+                        <option value="Qik">Qik - Banco digital</option>
+                    </InputSelect>
+                    <ValidationMessage For="(() => NuevaTransferencia.Origen)" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Banco Destino <span class="text-danger">*</span></label>
+                    <InputSelect class="form-select" @bind-Value="NuevaTransferencia.Destino">
+                        <option value="">-- Seleccione --</option>
+                        <option value="Banreservas">Banreservas</option>
+                        <option value="Popular">Popular</option>
+                        <option value="BHD">BHD</option>
+                    </InputSelect>
+                    <ValidationMessage For="(() => NuevaTransferencia.Destino)" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Monto <span class="text-danger">*</span></label>
+                    <InputNumber class="form-control" @bind-Value="NuevaTransferencia.Monto" />
+                    <ValidationMessage For="(() => NuevaTransferencia.Monto)" />
+                </div>
+
+                <div class="col-md-6 mb-3">
+                    <label class="form-label fw-bold">Fecha <span class="text-danger">*</span></label>
+                    <InputDate class="form-control" @bind-Value="NuevaTransferencia.Fecha" />
+                </div>
+
+                <div class="col-md-12 mb-3">
+                    <label class="form-label fw-bold">Observaciones</label>
+                    <InputTextArea class="form-control" @bind-Value="NuevaTransferencia.Observaciones" placeholder="Notas administrativas..." />
+                </div>
+            </div>
+
+            <hr />
+
+            <div class="mb-4">
+                <h5 class="fw-bold"><i class="bi bi-paperclip"></i> Comprobantes Adicionales</h5>
+                <div class="p-3 border rounded bg-light">
+                    <InputFile OnChange="@HandleFileSelection" class="form-control" multiple accept=".jpg,.jpeg,.png" />
+                    @if (selectedFiles.Count > 0)
+                    {
+                        <div class="mt-2 text-success fw-bold">
+                            <i class="bi bi-check-circle"></i> @selectedFiles.Count archivos seleccionados.
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a href="/Transferencia/Index" class="btn btn-outline-secondary px-4">Volver</a>
+
+                <div class="d-flex">
+                    @if (TransferenciaId > 0)
+                    {
+                        <button type="button" class="btn btn-outline-danger me-2" @onclick="Eliminar">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                    }
+                    <button type="submit" class="btn btn-success px-5 shadow" style="background-color: #4c7c4c; border: none;">
+                        <i class="bi bi-floppy"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter] public int TransferenciaId { get; set; }
+    public Transferencia NuevaTransferencia { get; set; } = new Transferencia { Fecha = DateTime.Now };
+    public List<Cliente> ListaClientes { get; set; } = new List<Cliente>();
+
+    private List<IBrowserFile> selectedFiles = new List<IBrowserFile>();
+    private string Titulo => TransferenciaId > 0 ? "Editar" : "Registrar";
+    private const long MaxFileSize = 1024 * 1024 * 5;
+
+    protected override async Task OnInitializedAsync()
+    {
+        ListaClientes = await clienteServices.Listar(c => true);
+
+        if (TransferenciaId > 0)
+        {
+            var encontrada = await TransferenciaService.Buscar(TransferenciaId);
+            if (encontrada != null) NuevaTransferencia = encontrada;
+        }
+    }
+
+    private void HandleFileSelection(InputFileChangeEventArgs e)
+    {
+        selectedFiles.Clear();
+        foreach (var file in e.GetMultipleFiles())
+        {
+            if (file.Size <= MaxFileSize) selectedFiles.Add(file);
+        }
+    }
+
+    private async Task GuardarTransferenciaCompleta()
+    {
+        if (NuevaTransferencia.ClienteId <= 0) return;
+
+        // Gestión de archivos
+        string uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "TransferenciaUploads");
+        if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
+
+        NuevaTransferencia.Imagenes ??= new List<TransferenciaImagen>();
+
+        foreach (var file in selectedFiles)
+        {
+            string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.Name);
+            string fullServerPath = Path.Combine(uploadsPath, uniqueFileName);
+
+            await using (var stream = new FileStream(fullServerPath, FileMode.Create))
+            {
+                await file.OpenReadStream(MaxFileSize).CopyToAsync(stream);
+            }
+            NuevaTransferencia.Imagenes.Add(new TransferenciaImagen { RutaImagen = $"/TransferenciaUploads/{uniqueFileName}" });
+        }
+
+        bool guardado = await TransferenciaService.Guardar(NuevaTransferencia);
+        if (guardado)
+        {
+            await Swal.FireAsync("¡Guardado!", "La transferencia se registró exitosamente.", SweetAlertIcon.Success);
+            NavigationManager.NavigateTo("/Transferencia/Index");
+        }
+    }
+
+    public async Task Eliminar()
+    {
+        var confirmacion = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "¿Estás seguro?",
+            Text = $"¿Deseas eliminar esta transferencia de monto {NuevaTransferencia.Monto:N2}?",
+            Icon = SweetAlertIcon.Warning,
+            ShowCancelButton = true,
+            ConfirmButtonText = "<i class=\"bi bi-trash-fill me-1\"></i> Eliminar",
+            CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+        });
+
+        if (!string.IsNullOrEmpty(confirmacion.Value))
+        {
+            var passwordResult = await Swal.FireAsync(new SweetAlertOptions
+            {
+                Title = "Confirmar identidad",
+                Text = "Ingresa tu contraseña de administrador para autorizar:",
+                Input = SweetAlertInputType.Password,
+                InputPlaceholder = "Tu contraseña",
+                ShowCancelButton = true,
+                ConfirmButtonText = "<i class=\"bi bi-shield-lock-fill me-1\"></i> Verificar",
+                CancelButtonText = "<i class=\"bi bi-x-circle-fill me-1\"></i> Cancelar"
+            });
+
+            if (!string.IsNullOrEmpty(passwordResult.Value))
+            {
+                var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+                var user = await UserManager.GetUserAsync(authState.User);
+
+                if (user != null && await UserManager.CheckPasswordAsync(user, passwordResult.Value))
+                {
+                    // Se usa el servicio para marcar como eliminado (Eliminado = true)
+                    var ok = await TransferenciaService.Eliminar(NuevaTransferencia.TransferenciaId);
+
+                    if (ok)
+                    {
+                        await Swal.FireAsync("¡Eliminado!", "Registro borrado correctamente.", SweetAlertIcon.Success);
+                        NavigationManager.NavigateTo("/Transferencia/Index");
+                    }
+                }
+                else
+                {
+                    await Swal.FireAsync("Acceso Denegado", "Contraseña incorrecta.", SweetAlertIcon.Error);
+                }
+            }
+        }
+    }
+}

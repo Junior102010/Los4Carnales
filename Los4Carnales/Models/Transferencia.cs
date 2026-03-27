@@ -18,18 +18,22 @@ public class Transferencia
     [Required(ErrorMessage = "Campo obligatorio")]
     public string Destino { get; set; } = string.Empty;
 
-    [Required(ErrorMessage = "Tiene que Tener un Monto 😪")]
-    [Range(0.01, double.MaxValue, ErrorMessage = "El monto transferido debe ser mayor a 0.")]
-    public double Monto { get; set; }
+    [Required(ErrorMessage = "El monto es obligatorio")]
+    [Range(0.01, double.MaxValue, ErrorMessage = "El monto debe ser mayor a 0")]
+    public double Monto { get; set; } // Cambiado a decimal para precisión financiera
 
-    [Required]
-    public string Observaciones { get; set; } = string.Empty;
+    public string? Observaciones { get; set; } // Opcional para mayor flexibilidad
+
     public bool Eliminado { get; set; } = false;
+
+    // Relación con Cliente (Necesaria para el registro del Admin)
+    public int ClienteId { get; set; }
+
     public int? PedidoId { get; set; }
 
     [ForeignKey("PedidoId")]
     public Pedido? Pedido { get; set; }
 
     public ICollection<TransferenciaImagen> Imagenes { get; set; } = new List<TransferenciaImagen>();
-  
+
 }
