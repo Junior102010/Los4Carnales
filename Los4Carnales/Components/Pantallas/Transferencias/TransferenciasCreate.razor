@@ -153,9 +153,21 @@
             return;
         }
 
-        // Gestión de archivos
-        string uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "TransferenciaUploads");
-        if (!Directory.Exists(uploadsPath)) Directory.CreateDirectory(uploadsPath);
+        string uploadsPath;
+
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("HOME")))
+        {
+            // Azure
+            uploadsPath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "site", "wwwroot", "TransferenciaUploads");
+        }
+        else
+        {
+            // Local
+            uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "TransferenciaUploads");
+        }
+
+        if (!Directory.Exists(uploadsPath))
+            Directory.CreateDirectory(uploadsPath);
 
         NuevaTransferencia.Imagenes ??= new List<TransferenciaImagen>();
 
