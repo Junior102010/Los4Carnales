@@ -7,10 +7,10 @@ namespace Los4Carnales.Services;
 
 public class TranferenciaServices(IDbContextFactory<ApplicationDbContext> DbFactory)
 {
-    public async Task<bool> Existe(int idTranferencia)
+    public async Task<bool> Existe(int idTransferencia)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.Transferencia.AnyAsync(c => c.TransferenciaId == idTranferencia);
+        return await contexto.Transferencia.AnyAsync(c => c.TransferenciaId == idTransferencia);
     }
 
     public async Task<Transferencia?> Buscar(int id)
@@ -18,7 +18,7 @@ public class TranferenciaServices(IDbContextFactory<ApplicationDbContext> DbFact
         await using var contexto = await DbFactory.CreateDbContextAsync();
 
         return await contexto.Transferencia
-            .Include(t => t.Imagenes) 
+            .Include(t => t.Imagenes)
             .FirstOrDefaultAsync(c => c.TransferenciaId == id);
     }
 
@@ -26,7 +26,11 @@ public class TranferenciaServices(IDbContextFactory<ApplicationDbContext> DbFact
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
 
-        return await contexto.Transferencia.Include(t => t.Imagenes) .Where(criterio).AsNoTracking().ToListAsync();
+        return await contexto.Transferencia
+            .Include(t => t.Imagenes)
+            .Where(criterio)
+            .AsNoTracking()
+            .ToListAsync();
     }
 
     public async Task<bool> Insertar(Transferencia transferencia)
@@ -46,7 +50,6 @@ public class TranferenciaServices(IDbContextFactory<ApplicationDbContext> DbFact
         contexto.Transferencia.Add(nuevaTransferencia);
         var guardado = await contexto.SaveChangesAsync() > 0;
 
-        // Si había imágenes en el objeto original, las guardamos ahora que tenemos ID
         if (guardado && transferencia.Imagenes != null && transferencia.Imagenes.Any())
         {
             foreach (var img in transferencia.Imagenes)
@@ -60,11 +63,10 @@ public class TranferenciaServices(IDbContextFactory<ApplicationDbContext> DbFact
         return guardado;
     }
 
-    public async Task<bool> Guardar(Transferencia transferencia) 
-    { 
+    public async Task<bool> Guardar(Transferencia transferencia)
+    {
         if (!await Existe(transferencia.TransferenciaId))
         {
-
             return await Insertar(transferencia);
         }
         else
@@ -78,15 +80,72 @@ public class TranferenciaServices(IDbContextFactory<ApplicationDbContext> DbFact
         await using var contexto = await DbFactory.CreateDbContextAsync();
 
         var imagenesActuales = contexto.TransferenciaImagenes
-        .Where(ti => ti.TransferenciaId == transferencia.TransferenciaId);
+            .Where(ti => ti.TransferenciaId == transferencia.TransferenciaId);
 
         contexto.TransferenciaImagenes.RemoveRange(imagenesActuales);
 
-        contexto.Entry(transferencia).State = EntityState.Modified;
-
         contexto.Update(transferencia);
 
+        return await contexto.SaveChangesAsync() > 0;
+    }
 
+    // --- NUEVA LÓGICA DE ELIMINACIÓN LÓGICA ---
+
+    public async Task<bool> Eliminar(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var transferencia = await contexto.Transferencia.FindAsync(id);
+
+        if (transferencia == null)
+            return false;
+
+        transferencia.Eliminado = true; // Basado en la lógica de ProveedoresServices
+        contexto.Update(transferencia);
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    public async Task<List<Transferencia>> ListarPapelera()
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        return await contexto.Transferencia
+            .IgnoreQueryFilters() // Para ver los registros con Eliminado = true
+            .Where(t => t.Eliminado)
+            .Include(t => t.Imagenes)
+            .AsNoTracking()
+            .ToListAsync();
+    }
+
+    public async Task<bool> Restaurar(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var transferencia = await contexto.Transferencia
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(t => t.TransferenciaId == id);
+
+        if (transferencia == null)
+            return false;
+
+        transferencia.Eliminado = false; // Restaurar registro
+        contexto.Update(transferencia);
+        return await contexto.SaveChangesAsync() > 0;
+    }
+
+    public async Task<bool> EliminarPermanente(int id)
+    {
+        await using var contexto = await DbFactory.CreateDbContextAsync();
+        var transferencia = await contexto.Transferencia
+            .IgnoreQueryFilters()
+            .Include(t => t.Imagenes)
+            .FirstOrDefaultAsync(t => t.TransferenciaId == id);
+
+        if (transferencia == null)
+            return false;
+
+        // Eliminar imágenes relacionadas primero si es necesario
+        if (transferencia.Imagenes != null)
+            contexto.TransferenciaImagenes.RemoveRange(transferencia.Imagenes);
+
+        contexto.Transferencia.Remove(transferencia); // Borrado físico de la BD
         return await contexto.SaveChangesAsync() > 0;
     }
 
