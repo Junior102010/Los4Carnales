@@ -127,79 +127,140 @@
     </div>
 </div>
 
-@* --- MODAL DE DETALLES --- *@
+@* --- MODAL DE DETALLES ENRIQUECIDO --- *@
 @if (ModalVisible && EntradaSeleccionada != null)
 {
     <div class="custom-modal-backdrop" @onclick="CerrarModal">
-        <div class="custom-modal-content" style="width: 600px;" @onclick:stopPropagation="true">
+        <div class="custom-modal-content" style="width: 750px; max-height: 90vh; overflow-y: auto;" @onclick:stopPropagation="true">
 
             <div class="modal-header-custom">
-                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-box-arrow-in-down me-2"></i> Detalles de la Entrada</h5>
+                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-box-arrow-in-down me-2"></i> Detalles Completos de la Entrada</h5>
                 <button class="action-btn text-muted" @onclick="CerrarModal"><i class="bi bi-x-lg"></i></button>
             </div>
 
             <div class="modal-body-custom mt-3">
+                @* Encabezado de la Entrada *@
                 <div class="row mb-3 bg-light bg-opacity-50 p-2 rounded-3 border">
-                    <div class="col-6">
+                    <div class="col-md-4">
                         <small class="text-muted fw-bold text-uppercase">Nº Lote</small>
                         <p class="fs-5 mb-0 fw-bold text-primary">@EntradaSeleccionada.NumeroLote</p>
                     </div>
-                    <div class="col-6 text-end">
+                    <div class="col-md-4 text-center">
+                        <small class="text-muted fw-bold text-uppercase">Tipo de Entrada</small><br />
+                        @if (EntradaSeleccionada.EsFormal)
+                        {
+                            <span class="badge bg-primary">Formal</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Informal</span>
+                        }
+                    </div>
+                    <div class="col-md-4 text-end">
                         <small class="text-muted fw-bold text-uppercase">Estado actual</small>
                         <p class="mb-0 text-danger fw-bold"><i class="bi bi-trash3-fill"></i> Eliminada</p>
                     </div>
                 </div>
 
+                @* Información General *@
+                <h6 class="fw-bold text-muted mb-3 border-bottom pb-2"><i class="bi bi-info-circle"></i> Información General</h6>
                 <div class="row mb-3">
-                    <div class="col-12 mb-2">
+                    <div class="col-md-6 mb-3">
                         <small class="text-muted fw-bold">Proveedor</small>
                         <p class="mb-0 text-dark fw-bold">
                             @(EntradaSeleccionada.Proveedor != null ? EntradaSeleccionada.Proveedor.Nombre : "Desconocido")
                         </p>
                     </div>
-                    <div class="col-6">
+                    <div class="col-md-6 mb-3">
                         <small class="text-muted fw-bold">Fecha de Registro</small>
                         <p class="mb-0 text-dark">@EntradaSeleccionada.FechaEntrada.ToString("dd/MM/yyyy hh:mm tt")</p>
                     </div>
-                    <div class="col-6">
+                    <div class="col-12 mb-3">
                         <small class="text-muted fw-bold">Referencia / Concepto</small>
                         <p class="mb-0 text-dark">@EntradaSeleccionada.Concepto</p>
                     </div>
                 </div>
 
-                <hr class="opacity-25" />
-                <h6 class="fw-bold text-muted mb-2">Productos en esta Entrada:</h6>
+                @* Información Formal (Solo si aplica) *@
+                @if (EntradaSeleccionada.EsFormal)
+                {
+                    <h6 class="fw-bold text-muted mb-3 border-bottom pb-2"><i class="bi bi-card-checklist"></i> Datos de Formalización</h6>
+                    <div class="row mb-3 bg-light p-3 rounded-3">
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted fw-bold">Orden de Compra</small>
+                            <p class="mb-0 fw-bold">@(string.IsNullOrWhiteSpace(EntradaSeleccionada.OrdenCompra) ? "N/A" : EntradaSeleccionada.OrdenCompra)</p>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted fw-bold">Fecha Orden Compra</small>
+                            <p class="mb-0">@(EntradaSeleccionada.FechaOrdenCompra?.ToShortDateString() ?? "N/A")</p>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted fw-bold">Cotización</small>
+                            <p class="mb-0">@(string.IsNullOrWhiteSpace(EntradaSeleccionada.Cotizacion) ? "N/A" : EntradaSeleccionada.Cotizacion)</p>
+                        </div>
+                        <div class="col-md-6 mb-2">
+                            <small class="text-muted fw-bold">Acuerdo de Pago (Días)</small>
+                            <p class="mb-0 fw-bold text-primary">@EntradaSeleccionada.AcuerdoPagoDias</p>
+                        </div>
+                        <div class="col-md-12 mb-2">
+                            <small class="text-muted fw-bold">Razón Social</small>
+                            <p class="mb-0 text-dark">@(string.IsNullOrWhiteSpace(EntradaSeleccionada.RazonSocial) ? "N/A" : EntradaSeleccionada.RazonSocial)</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted fw-bold">RNC Empresa</small>
+                            <p class="mb-0">@(string.IsNullOrWhiteSpace(EntradaSeleccionada.RncEmpresa) ? "N/A" : EntradaSeleccionada.RncEmpresa)</p>
+                        </div>
+                        <div class="col-md-6">
+                            <small class="text-muted fw-bold">RNC Proveedor</small>
+                            <p class="mb-0">@(string.IsNullOrWhiteSpace(EntradaSeleccionada.RncProveedor) ? "N/A" : EntradaSeleccionada.RncProveedor)</p>
+                        </div>
+                    </div>
+                }
 
-                <div class="table-responsive" style="max-height: 200px; overflow-y: auto;">
-                    <table class="table table-sm table-hover align-middle">
-                        <thead class="text-muted" style="background-color: rgba(0,0,0,0.03);">
+                @* Tabla de Detalles *@
+                <h6 class="fw-bold text-muted mb-2 mt-4"><i class="bi bi-box-seam"></i> Productos en esta Entrada:</h6>
+                <div class="table-responsive border rounded-3" style="max-height: 250px; overflow-y: auto;">
+                    <table class="table table-sm table-hover align-middle mb-0">
+                        <thead class="text-muted" style="background-color: rgba(0,0,0,0.03); position: sticky; top: 0; z-index: 1;">
                             <tr>
-                                <th>Producto</th>
-                                <th class="text-center">Cant. Original</th>
+                                <th class="ps-3 py-2">Producto</th>
+                                <th class="text-center py-2">Cant. Original</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var detalle in EntradaSeleccionada.EntradaDetalles)
+                            @if (EntradaSeleccionada.EntradaDetalles.Any())
+                            {
+                                @foreach (var detalle in EntradaSeleccionada.EntradaDetalles)
+                                {
+                                    <tr>
+                                        <td class="fw-bold text-dark ps-3">@(detalle.Producto?.NombreProducto ?? "Producto eliminado de BD")</td>
+                                        <td class="text-center fw-bold" style="color: #3D5D35;">@detalle.Cantidad</td>
+                                    </tr>
+                                }
+                            }
+                            else
                             {
                                 <tr>
-                                    <td class="fw-bold text-dark">@(detalle.Producto?.NombreProducto ?? "Producto eliminado de BD")</td>
-                                    <td class="text-center fw-bold" style="color: #3D5D35;">@detalle.Cantidad</td>
+                                    <td colspan="2" class="text-center text-muted py-3">No hay productos registrados.</td>
                                 </tr>
                             }
                         </tbody>
                     </table>
                 </div>
 
-                <div class="row mt-2">
-                    <div class="col-12 text-end">
+                <div class="row mt-3">
+                    <div class="col-12 text-end bg-light p-2 rounded-3 border">
                         <small class="text-muted fw-bold">Total Artículos Restados del Inventario:</small>
                         <p class="fs-5 mb-0 fw-bold text-danger">- @EntradaSeleccionada.EntradaDetalles.Sum(d => d.Cantidad)</p>
                     </div>
                 </div>
             </div>
 
-            <div class="modal-footer-custom mt-4 text-end">
-                <button class="btn btn-secondary px-4 rounded-pill" @onclick="CerrarModal">Cerrar</button>
+            <div class="modal-footer-custom mt-4 d-flex justify-content-between">
+                <button class="btn btn-outline-danger px-4 rounded-pill" title="Eliminar definitivamente" @onclick="() => { CerrarModal(); EliminarDefinitivamente(EntradaSeleccionada.EntradaId); }">
+                    <i class="bi bi-trash3-fill"></i> Purgar
+                </button>
+                <button class="btn btn-secondary px-5 rounded-pill shadow-sm" @onclick="CerrarModal">Cerrar</button>
             </div>
         </div>
     </div>
