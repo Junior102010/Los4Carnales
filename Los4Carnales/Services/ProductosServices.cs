@@ -22,7 +22,7 @@ public class ProductosServices(IDbContextFactory<ApplicationDbContext> DbFactory
     public async Task<List<Producto>> Listar(Expression<Func<Producto, bool>> criterio)
     {
         await using var contexto = await DbFactory.CreateDbContextAsync();
-        return await contexto.Producto.Where(criterio).AsNoTracking().ToListAsync();
+        return await contexto.Producto.Include(e => e.Categoria).Include(e => e.UnidadMedida).Where(criterio).AsNoTracking().ToListAsync();
     }
 
     public async Task<bool> Insertar(Producto producto)
@@ -101,6 +101,8 @@ public class ProductosServices(IDbContextFactory<ApplicationDbContext> DbFactory
         await using var contexto = await DbFactory.CreateDbContextAsync();
         return await contexto.Producto
             // Filtramos para que no salgan productos que están en la papelera
+            .Include(p => p.Categoria)      
+        .Include(p => p.UnidadMedida)
             .Where(p => p.Existencia <= limite && !p.Eliminado)
             .AsNoTracking()
             .ToListAsync();

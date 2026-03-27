@@ -1,8 +1,11 @@
 ﻿@page "/Producto/Create"
 @using Microsoft.AspNetCore.Authorization
+@using Los4Carnales.Services
+@using Los4Carnales.Models
 
 @inject ProductosServices productosService
-@inject ConfiguracionService configService
+@inject UnidadMedidaService unidadService
+@inject CategoriaService categoriaService
 @inject NavigationManager navigationManager
 @inject PageTitleService PageTitleService
 
@@ -19,11 +22,9 @@
 
             <div class="card-body">
 
-                @* --- FILA 1: DATOS BÁSICOS (Ajustado a 3 columnas) --- *@
                 <div class="row mb-4">
                     <div class="col-md-4">
-                        <label class="form-label text-muted small fw-bold mb-1">Nombre del Producto</label>
-                        @* Agregamos el evento :after para generar la etiqueta al escribir *@
+                        <label class="form-label text-muted small fw-bold">Nombre del Producto</label>
                         <InputText class="form-control input-glass"
                                    @bind-Value="Producto.NombreProducto"
                                    @bind-Value:after="GenerarEtiqueta"
@@ -32,157 +33,138 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label text-muted small fw-bold mb-1">Categoría</label>
-                        @* Agregamos el evento :after para generar la etiqueta al seleccionar *@
-                        <InputSelect class="form-select input-glass"
-                                     @bind-Value="Producto.Categoria"
-                                     @bind-Value:after="GenerarEtiqueta">
-                            <option value="" selected disabled>Seleccione una categoría</option>
-                            <option value="Carnes">Carnes</option>
-                            <option value="Granos">Granos</option>
-                            <option value="Verduras">Verduras</option>
-                            <option value="Vegetales">Vegetales</option>
-                            <option value="Ensaladas">Ensaladas</option>
-                            <option value="Frutas">Frutas</option>
-                            <option value="Sazones">Sazones</option>
-                            <option value="Víveres">Víveres</option>
-                            <option value="Embutidos">Embutidos</option>
-                            <option value="Lácteos">Lácteos</option>
-                            <option value="Otros">Otros</option>
-                        </InputSelect>
-                        <ValidationMessage For="(() => Producto.Categoria)" />
+                        <label class="form-label text-muted small fw-bold">Categoría</label>
+                        <div class="input-group">
+                            <InputSelect class="form-select input-glass"
+                                         @bind-Value="Producto.CategoriaId"
+                                         @bind-Value:after="GenerarEtiqueta">
+                                <option value="0" disabled>Seleccione una categoria...</option>
+                                @foreach (var c in ListaCategorias)
+                                {
+                                    <option value="@c.CategoriaId">@c.Nombre</option>
+                                }
+                            </InputSelect>
+                            <a href="/Logistica/Categorias" class="btn btn-outline-secondary">
+                                <i class="bi bi-gear"></i>
+                            </a>
+                        </div>
+                        <ValidationMessage For="(() => Producto.CategoriaId)" />
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label text-muted small fw-bold mb-1">Etiqueta (Auto-generada)</label>
-                        @* Se le agrega readonly para que no se pueda modificar manualmente *@
+                        <label class="form-label text-muted small fw-bold">Etiqueta</label>
                         <InputText class="form-control input-glass text-primary fw-bold"
                                    @bind-Value="Producto.Etiqueta"
-                                   readonly
-                                   placeholder="Ej: PCA0000" />
+                                   readonly />
                         <ValidationMessage For="(() => Producto.Etiqueta)" />
                     </div>
                 </div>
 
-                <hr class="border-secondary opacity-25" />
+                <hr />
 
-                @* --- FILA 2: PRECIOS --- *@
                 <div class="row mb-3">
                     <div class="col-md-4">
-                        <label class="form-label text-muted small fw-bold mb-1">Costo (Compra)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0 text-muted">$</span>
-                            <InputNumber class="form-control input-glass border-start-0" @bind-Value="Producto.Costo" />
-                        </div>
+                        <label class="form-label text-muted small fw-bold">Costo</label>
+                        <InputNumber class="form-control input-glass"
+                                     @bind-Value="Producto.Costo" />
                         <ValidationMessage For="(() => Producto.Costo)" />
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label text-muted small fw-bold mb-1">Precio (Público)</label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0 text-muted">$</span>
-                            <InputNumber class="form-control input-glass border-start-0" @bind-Value="Producto.Precio" />
-                        </div>
+                        <label class="form-label text-muted small fw-bold">Precio</label>
+                        <InputNumber class="form-control input-glass"
+                                     @bind-Value="Producto.Precio" />
                         <ValidationMessage For="(() => Producto.Precio)" />
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label small fw-bold mb-1" style="color: #3D5D35;">
-                            <i class="bi bi-building"></i> Precio Empresa
-                        </label>
-                        <div class="input-group">
-                            <span class="input-group-text bg-transparent border-end-0" style="color: #3D5D35;">$</span>
-                            <InputNumber class="form-control input-glass border-start-0 fw-bold"
-                                         style="color: #3D5D35;"
-                                         @bind-Value="Producto.PrecioEmpresa" />
-                        </div>
+                        <label class="form-label text-muted small fw-bold">Precio Empresa</label>
+                        <InputNumber class="form-control input-glass"
+                                     @bind-Value="Producto.PrecioEmpresa" />
                         <ValidationMessage For="(() => Producto.PrecioEmpresa)" />
                     </div>
                 </div>
 
-                @* --- FILA 3: UNIDADES (DINÁMICO) Y EXISTENCIA --- *@
                 <div class="row mb-3">
-
                     <div class="col-md-6">
-                        <label class="form-label text-muted small fw-bold mb-1">Unidad de Medida</label>
+                        <label class="form-label text-muted small fw-bold">Unidad</label>
                         <div class="input-group">
-                            <InputSelect class="form-select input-glass" @bind-Value="Producto.UnidadMedida">
-                                <option value="" selected disabled>Elija unidad</option>
+                            <InputSelect class="form-select input-glass"
+                                         @bind-Value="Producto.UnidadMedidaId">
+                                <option value="0" disabled>Seleccione unidad</option>
                                 @foreach (var u in ListaUnidades)
                                 {
-                                    <option value="@u.Abreviatura">@u.Descripcion (@u.Abreviatura)</option>
+                                    <option value="@u.UnidadId">
+                                        @u.Descripcion (@u.Abreviatura)
+                                    </option>
                                 }
                             </InputSelect>
-                            <a href="/Unidades/Index" class="btn btn-outline-secondary" title="Gestionar Unidades">
+                            <a href="/Logistica/Unidades" class="btn btn-outline-secondary">
                                 <i class="bi bi-gear"></i>
                             </a>
                         </div>
-                        <ValidationMessage For="(() => Producto.UnidadMedida)" />
+                        <ValidationMessage For="(() => Producto.UnidadMedidaId)" />
                     </div>
 
                     <div class="col-md-6">
-                        <label class="form-label text-muted small fw-bold mb-1">Existencia Inicial</label>
-                        <InputNumber class="form-control input-glass bg-transparent text-muted" @bind-Value="Producto.Existencia" disabled />
-                        <div class="form-text text-muted small fst-italic">
-                            * La existencia se gestiona mediante Entradas.
-                        </div>
+                        <label class="form-label text-muted small fw-bold">Existencia</label>
+                        <InputNumber class="form-control input-glass"
+                                     @bind-Value="Producto.Existencia"
+                                     disabled />
                     </div>
                 </div>
 
                 @if (!string.IsNullOrEmpty(Mensaje))
                 {
-                    <div class="alert alert-danger mt-3 text-center py-2" role="alert">
-                        <small>@Mensaje</small>
+                    <div class="alert alert-danger text-center">
+                        @Mensaje
                     </div>
                 }
             </div>
 
-            <div class="card-footer bg-transparent border-top-0 d-flex justify-content-between align-items-center mt-2 pt-0 pb-3 px-4">
-                <a href="/Almacen" class="btn btn-outline-secondary px-4">
-                    <span class="bi bi-arrow-left"></span> Volver
-                </a>
-                <button type="submit" class="btn btn-gradiente px-5">
-                    <span class="bi bi-floppy"></span> Guardar
-                </button>
+            <div class="card-footer d-flex justify-content-between">
+                <a href="/Almacen" class="btn btn-outline-secondary">Volver</a>
+                <button type="submit" class="btn btn-primary">Guardar</button>
             </div>
-
         </div>
     </div>
 </EditForm>
 
 @code {
-    public Producto Producto { get; set; } = new Producto();
+    public Producto Producto { get; set; } = new();
     public string Mensaje { get; set; } = string.Empty;
 
     public List<UnidadMedida> ListaUnidades { get; set; } = new();
+    public List<Categorias> ListaCategorias { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
         PageTitleService.SetTitle("Crear Producto");
         Producto.Existencia = 0;
 
-        ListaUnidades.Add(new UnidadMedida(1, "Kilogramos", "Kg"));
-        ListaUnidades.Add(new UnidadMedida(2, "Libra", "Libra"));
+        ListaUnidades = await unidadService.Listar(_ => true);
+        ListaCategorias = await categoriaService.Listar(_ => true);
     }
 
-    // --- LÓGICA DE AUTO-GENERACIÓN DE ETIQUETA ---
     private void GenerarEtiqueta()
     {
-        // Solo genera si ambos campos (Nombre y Categoría) ya tienen algún dato
-        if (!string.IsNullOrWhiteSpace(Producto.NombreProducto) && !string.IsNullOrWhiteSpace(Producto.Categoria))
+        // Validamos que exista un ID seleccionado y un nombre escrito
+        if (Producto.CategoriaId == 0 || string.IsNullOrWhiteSpace(Producto.NombreProducto))
+            return;
+
+        // Buscamos la categoría en nuestra lista usando el ID
+        var catSeleccionada = ListaCategorias.FirstOrDefault(c => c.CategoriaId == Producto.CategoriaId);
+
+        if (catSeleccionada != null && !string.IsNullOrWhiteSpace(catSeleccionada.Nombre))
         {
-            // 1. Obtener primera letra del nombre (Ej: "Pollo" -> "P")
             string letraNombre = Producto.NombreProducto.Substring(0, 1).ToUpper();
 
-            // 2. Obtener las primeras 2 letras de la categoría (Ej: "Carnes" -> "CA")
-            string letrasCat = Producto.Categoria.Length >= 2
-                                ? Producto.Categoria.Substring(0, 2).ToUpper()
-                                : Producto.Categoria.ToUpper();
+            string letrasCat = catSeleccionada.Nombre.Length >= 2
+                ? catSeleccionada.Nombre.Substring(0, 2).ToUpper()
+                : catSeleccionada.Nombre.ToUpper();
 
-            // 3. Generar una numeración de 4 dígitos (Ej: 0045, 1023)
             string numeracion = Random.Shared.Next(1, 10000).ToString("D4");
 
-            // 4. Unir todo (Ej: PCA0045)
             Producto.Etiqueta = $"{letraNombre}{letrasCat}{numeracion}";
         }
     }
@@ -190,9 +172,16 @@
     public async Task Guardar()
     {
         Mensaje = string.Empty;
+
+        if (Producto.CategoriaId == 0 || Producto.UnidadMedidaId == 0)
+        {
+            Mensaje = "Debe seleccionar una Categoría y una Unidad de Medida.";
+            return;
+        }
+
         if (Producto.Costo < 0 || Producto.Precio < 0 || Producto.PrecioEmpresa < 0)
         {
-            Mensaje = "Los precios y costos no pueden ser negativos.";
+            Mensaje = "Los precios no pueden ser negativos.";
             return;
         }
 
@@ -204,7 +193,7 @@
         }
         else
         {
-            Mensaje = "Ocurrió un error al intentar guardar el producto.";
+            Mensaje = "Error al guardar el producto.";
         }
     }
 }

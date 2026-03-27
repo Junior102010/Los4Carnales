@@ -1,0 +1,362 @@
+﻿@page "/Master/Logistica"
+
+@using Los4Carnales.Models
+@using Los4Carnales.Services
+@using Los4Carnales.Components.Layout
+
+@layout MasterLayout
+@rendermode InteractiveServer
+
+@inject PageTitleService PageTitleService
+@inject CategoriaService categoriaService
+@inject SectorService sectorService
+@inject UnidadMedidaService unidadService
+@inject IJSRuntime JS
+
+@attribute [Authorize(Roles = "Master")]
+
+<PageTitle>@PageTitleService.CurrentTitle</PageTitle>
+
+<div class="top-header-master">
+    @PageTitleService.CurrentTitle
+</div>
+
+<div class="logistica-wrapper">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex gap-4">
+            <div>
+                <div class="filter-label-custom">Filtrar por:</div>
+                <select class="form-select custom-input shadow-sm" @bind="CriterioFiltro">
+                    <option value="Nombre">Nombre</option>
+                    <option value="Tipo">Tipo</option>
+                </select>
+            </div>
+
+            <div>
+                <div class="filter-label-custom">Buscar</div>
+                <div class="input-group custom-input shadow-sm p-0 d-flex overflow-hidden">
+                    <input type="text" class="form-control border-0 bg-transparent shadow-none" placeholder="Escribe para buscar..."
+                           @bind="TextoBusqueda" @bind:event="oninput" style="width: 250px;" />
+                    <button class="btn border-0 bg-transparent text-muted" type="button">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div class="badge-eliminados shadow-sm d-flex align-items-center justify-content-center">
+            <i class="bi bi-trash-fill text-danger fs-3 me-3"></i>
+            <div class="text-center lh-1">
+                <div class="fs-4 fw-bold text-dark">@ListaFiltrada.Count</div>
+                <small class="text-muted" style="font-size: 0.8rem;">Eliminados</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-card-container">
+
+        <div class="custom-table-header d-flex align-items-center">
+            <div style="width: 15%; text-align: center;">TIPO</div>
+            <div style="width: 35%;">NOMBRE / DESCRIPCIÓN</div>
+            <div style="width: 20%;">DETALLE ADICIONAL</div>
+            <div style="width: 15%; text-align: center;">ESTADO</div>
+            <div style="width: 15%; text-align: center;">OPCIONES</div>
+        </div>
+
+        @if (!Categorias.Any() && !Sectores.Any() && !Unidades.Any())
+        {
+            <div class="d-flex flex-column align-items-center justify-content-center text-muted" style="min-height: 300px;">
+                <i class="bi bi-inbox fs-1 mb-3 text-secondary"></i>
+                <h4 class="fw-bold text-dark mb-1">La papelera está vacía</h4>
+                <p class="text-secondary">No hay registros eliminados recientemente.</p>
+            </div>
+        }
+        else
+        {
+            @foreach (var item in ListaFiltrada)
+            {
+                <div class="custom-data-row d-flex align-items-center">
+
+                    <div style="width: 15%; text-align: center;">
+                        <span class="badge @(item.Tipo == "Categoría" ? "bg-warning text-dark" :
+                                                                           item.Tipo == "Sector" ? "bg-success text-white" : "bg-primary text-white") rounded-pill px-3 py-2">
+                            @item.Tipo
+                        </span>
+                    </div>
+
+                    <div style="width: 35%;">
+                        <div class="fw-bold text-dark fs-6">@item.Nombre</div>
+                    </div>
+
+                    <div style="width: 20%;">
+                        <span class="text-muted fw-bold">@item.Detalle</span>
+                    </div>
+
+                    <div style="width: 15%; text-align: center;">
+                        <span class="text-danger fw-bold"><i class="bi bi-x-circle-fill me-1"></i> Eliminado</span>
+                    </div>
+
+                    <div style="width: 15%; text-align: center;">
+                        <button class="custom-action-btn view-btn" title="Ver detalles" @onclick="() => MostrarDetalles(item)">
+                            <i class="bi bi-eye-fill"></i>
+                        </button>
+                        <button class="custom-action-btn restore-btn" title="Restaurar al sistema" @onclick="() => Restaurar(item)">
+                            <i class="bi bi-arrow-counterclockwise"></i>
+                        </button>
+                        <button class="custom-action-btn delete-btn" title="Eliminar definitivamente" @onclick="() => EliminarDefinitivo(item)">
+                            <i class="bi bi-trash3-fill"></i>
+                        </button>
+                    </div>
+
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@if (ModalVisible && ItemSeleccionado != null)
+{
+    <div class="custom-modal-backdrop" @onclick="CerrarModal">
+        <div class="custom-modal-content" @onclick:stopPropagation="true">
+            <div class="modal-header-custom d-flex justify-content-between align-items-center mb-3">
+                <h5 class="m-0 fw-bold text-dark"><i class="bi bi-info-circle-fill me-2"></i> Detalles de Logística</h5>
+                <button class="btn btn-link text-muted p-0 fs-5" @onclick="CerrarModal"><i class="bi bi-x-lg"></i></button>
+            </div>
+
+            <div class="modal-body-custom">
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <small class="text-muted fw-bold">TIPO DE REGISTRO</small>
+                        <p class="fs-5 mb-0 fw-bold text-dark">@ItemSeleccionado.Tipo</p>
+                    </div>
+                    <div class="col-6 text-end">
+                        <small class="text-muted fw-bold">ESTADO</small>
+                        <p class="mb-0 text-danger fw-bold">Eliminado</p>
+                    </div>
+                </div>
+
+                <hr class="opacity-25" />
+
+                <div class="row mb-3">
+                    <div class="col-12 mb-3">
+                        <small class="text-muted fw-bold">NOMBRE / DESCRIPCIÓN</small>
+                        <p class="mb-0 text-dark fs-5 fw-bold">@ItemSeleccionado.Nombre</p>
+                    </div>
+                    <div class="col-12">
+                        <small class="text-muted fw-bold">INFORMACIÓN ADICIONAL</small>
+                        <p class="mb-0 text-secondary">@(string.IsNullOrEmpty(ItemSeleccionado.Detalle) ? "Sin detalles adicionales" : ItemSeleccionado.Detalle)</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 text-end">
+                <button class="btn btn-secondary px-4 rounded-pill" style="background-color: #e0d8c3; color: #5C4B44; border: none; font-weight: bold;" @onclick="CerrarModal">Cerrar</button>
+                <button class="btn btn-success px-4 rounded-pill ms-2" style="font-weight: bold;" @onclick="() => Restaurar(ItemSeleccionado)">Restaurar Ahora</button>
+            </div>
+        </div>
+    </div>
+}
+
+@* --- ESTILOS FORZADOS PARA CLONAR LA PANTALLA DE ALMACEN --- *@
+<style>
+    .logistica-wrapper {
+        padding: 20px;
+        background-color: transparent;
+    }
+
+    .filter-label-custom {
+        font-size: 0.85rem;
+        font-weight: bold;
+        font-style: italic;
+        color: #6c757d;
+        margin-bottom: 5px;
+    }
+
+    .custom-input {
+        border-radius: 12px;
+        border: 1px solid #e0d8c3;
+        background-color: #ffffff;
+        min-height: 42px;
+    }
+
+    .badge-eliminados {
+        background-color: #ffffff;
+        border-radius: 30px;
+        border: 1px solid #e0d8c3;
+        padding: 8px 25px;
+        min-width: 150px;
+    }
+
+    .main-card-container {
+        background-color: #fdfaf5; /* Color crema de fondo */
+        border: 2px solid #5C4B44; /* Borde marrón oscuro */
+        border-radius: 20px;
+        min-height: 500px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+    }
+
+    .custom-table-header {
+        background-color: #F4EFE6; /* Crema más oscuro para la cabecera */
+        border-radius: 12px;
+        padding: 12px 20px;
+        margin-bottom: 10px;
+        font-weight: 800;
+        color: #5C4B44;
+        font-size: 0.8rem;
+    }
+
+    .custom-data-row {
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        transition: background-color 0.2s ease;
+    }
+
+        .custom-data-row:hover {
+            background-color: #f5f1e8;
+            border-radius: 10px;
+        }
+
+    .custom-action-btn {
+        background-color: #ffffff;
+        border: 1px solid #e0d8c3;
+        border-radius: 8px;
+        padding: 6px 12px;
+        margin: 0 3px;
+        transition: all 0.2s;
+    }
+
+        .custom-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+    .view-btn {
+        color: #333;
+    }
+
+    .restore-btn {
+        color: #5C4B44;
+    }
+    /* Color marrón */
+    .delete-btn {
+        color: #dc3545;
+    }
+
+    /* Modal Styles */
+    .custom-modal-backdrop {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1050;
+    }
+
+    .custom-modal-content {
+        background: #fdfaf5;
+        border: 2px solid #5C4B44;
+        border-radius: 20px;
+        width: 100%;
+        max-width: 500px;
+        padding: 25px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    }
+</style>
+
+@code {
+    public List<LogisticaPapelera> ListaFiltrada => Filtrar();
+    public string TextoBusqueda { get; set; } = "";
+    public string CriterioFiltro { get; set; } = "Nombre";
+
+    public List<Categorias> Categorias { get; set; } = new();
+    public List<Sector> Sectores { get; set; } = new();
+    public List<UnidadMedida> Unidades { get; set; } = new();
+
+    public bool ModalVisible { get; set; } = false;
+    public LogisticaPapelera? ItemSeleccionado { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Papelera Logística");
+        await CargarDatos();
+    }
+
+    async Task CargarDatos()
+    {
+        Categorias = await categoriaService.ListarPapelera();
+        Sectores = await sectorService.ListarPapelera();
+        Unidades = await unidadService.ListarPapelera();
+    }
+
+    List<LogisticaPapelera> Filtrar()
+    {
+        var lista = new List<LogisticaPapelera>();
+        lista.AddRange(Categorias.Select(c => new LogisticaPapelera { Tipo = "Categoría", Nombre = c.Nombre, Detalle = "—", Id = c.CategoriaId }));
+        lista.AddRange(Sectores.Select(s => new LogisticaPapelera { Tipo = "Sector", Nombre = s.Nombre, Detalle = s.Municipio, Id = s.SectorId }));
+        lista.AddRange(Unidades.Select(u => new LogisticaPapelera { Tipo = "Unidad", Nombre = u.Descripcion, Detalle = u.Abreviatura, Id = u.UnidadId }));
+
+        if (string.IsNullOrWhiteSpace(TextoBusqueda)) return lista;
+
+        return CriterioFiltro switch
+        {
+            "Tipo" => lista.Where(x => x.Tipo.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList(),
+            _ => lista.Where(x => x.Nombre.Contains(TextoBusqueda, StringComparison.OrdinalIgnoreCase)).ToList()
+        };
+    }
+
+    async Task Restaurar(LogisticaPapelera item)
+    {
+        ModalVisible = false;
+        bool exito = item.Tipo switch
+        {
+            "Categoría" => await categoriaService.Restaurar(item.Id),
+            "Sector" => await sectorService.Restaurar(item.Id),
+            "Unidad" => await unidadService.Restaurar(item.Id),
+            _ => false
+        };
+
+        if (exito) await CargarDatos();
+    }
+
+    async Task EliminarDefinitivo(LogisticaPapelera item)
+    {
+        bool confirmar = await JS.InvokeAsync<bool>("confirm", "⚠️ ¿Eliminar permanentemente? No se podrá recuperar.");
+        if (!confirmar) return;
+
+        bool exito = item.Tipo switch
+        {
+            "Categoría" => await categoriaService.EliminarPermanente(item.Id),
+            "Sector" => await sectorService.EliminarPermanente(item.Id),
+            "Unidad" => await unidadService.EliminarPermanente(item.Id),
+            _ => false
+        };
+
+        if (exito) await CargarDatos();
+    }
+
+    void MostrarDetalles(LogisticaPapelera item)
+    {
+        ItemSeleccionado = item;
+        ModalVisible = true;
+    }
+
+    void CerrarModal()
+    {
+        ModalVisible = false;
+        ItemSeleccionado = null;
+    }
+
+    public class LogisticaPapelera
+    {
+        public int Id { get; set; }
+        public string Tipo { get; set; } = "";
+        public string Nombre { get; set; } = "";
+        public string Detalle { get; set; } = "";
+    }
+}
