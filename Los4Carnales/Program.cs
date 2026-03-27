@@ -54,9 +54,11 @@ builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<PageTitleService>();
 builder.Services.AddScoped<TranferenciaServices>();
 builder.Services.AddScoped<CarritoService>();
-builder.Services.AddScoped<ConfiguracionService>();
 builder.Services.AddScoped<ClientesServices>();
 builder.Services.AddScoped<AbonosService>();
+builder.Services.AddScoped<CategoriaService>();
+builder.Services.AddScoped<UnidadMedidaService>();
+builder.Services.AddScoped<SectorService>();
 builder.Services.AddSweetAlert2();
 
 

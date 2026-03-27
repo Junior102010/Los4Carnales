@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Los4Carnales.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260322050618_´inicialBETA´")]
-    partial class inicialBETA
+    [Migration("20260327015533_ClientesPreferenciales")]
+    partial class ClientesPreferenciales
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -100,6 +100,34 @@ namespace Los4Carnales.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("Los4Carnales.Models.Abono", b =>
+                {
+                    b.Property<int>("AbonoId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AbonoId"));
+
+                    b.Property<int>("ClienteId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("Fecha")
+                        .HasColumnType("datetime2");
+
+                    b.Property<double>("Monto")
+                        .HasColumnType("float");
+
+                    b.Property<string>("Observacion")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("AbonoId");
+
+                    b.HasIndex("ClienteId");
+
+                    b.ToTable("Abono");
+                });
+
             modelBuilder.Entity("Los4Carnales.Models.Categorias", b =>
                 {
                     b.Property<int>("CategoriaId")
@@ -120,6 +148,47 @@ namespace Los4Carnales.Migrations
                     b.ToTable("Categoria");
                 });
 
+            modelBuilder.Entity("Los4Carnales.Models.Cliente", b =>
+                {
+                    b.Property<int>("ClienteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ClienteId"));
+
+                    b.Property<string>("ApellidoCliente")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("CalleCliente")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DescripcionCliente")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NombreCliente")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Sector")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TelefonoCliente")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ViviendaCliente")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("ClienteId");
+
+                    b.ToTable("Cliente");
+                });
+
             modelBuilder.Entity("Los4Carnales.Models.Entrada", b =>
                 {
                     b.Property<int>("EntradaId")
@@ -128,22 +197,51 @@ namespace Los4Carnales.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("EntradaId"));
 
+                    b.Property<int>("AcuerdoPagoDias")
+                        .HasColumnType("int");
+
                     b.Property<string>("Concepto")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Cotizacion")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("Eliminado")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("EsFormal")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime>("FechaEntrada")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("FechaOrdenCompra")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("NumeroLote")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("OrdenCompra")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("ProveedorId")
                         .HasColumnType("int");
+
+                    b.Property<string>("RazonSocial")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RncEmpresa")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RncProveedor")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("EntradaId");
 
@@ -228,6 +326,9 @@ namespace Los4Carnales.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PedidoId"));
 
+                    b.Property<int?>("ClienteId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("Delivery")
                         .HasColumnType("bit");
 
@@ -257,6 +358,8 @@ namespace Los4Carnales.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PedidoId");
+
+                    b.HasIndex("ClienteId");
 
                     b.ToTable("Pedido");
                 });
@@ -669,6 +772,17 @@ namespace Los4Carnales.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Los4Carnales.Models.Abono", b =>
+                {
+                    b.HasOne("Los4Carnales.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Cliente");
+                });
+
             modelBuilder.Entity("Los4Carnales.Models.Entrada", b =>
                 {
                     b.HasOne("Los4Carnales.Models.Proveedores", "Proveedor")
@@ -706,6 +820,15 @@ namespace Los4Carnales.Migrations
                         .IsRequired();
 
                     b.Navigation("Pedido");
+                });
+
+            modelBuilder.Entity("Los4Carnales.Models.Pedido", b =>
+                {
+                    b.HasOne("Los4Carnales.Models.Cliente", "Cliente")
+                        .WithMany()
+                        .HasForeignKey("ClienteId");
+
+                    b.Navigation("Cliente");
                 });
 
             modelBuilder.Entity("Los4Carnales.Models.PedidoDetalle", b =>
