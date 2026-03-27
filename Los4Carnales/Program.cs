@@ -54,9 +54,9 @@ builder.Services.AddScoped<UsuarioServices>();
 builder.Services.AddScoped<PageTitleService>();
 builder.Services.AddScoped<TranferenciaServices>();
 builder.Services.AddScoped<CarritoService>();
-builder.Services.AddScoped<SectorService>();
-builder.Services.AddScoped<UnidadMedidaService>();
-builder.Services.AddScoped<CategoriaService>();
+builder.Services.AddScoped<ConfiguracionService>();
+builder.Services.AddScoped<ClientesServices>();
+builder.Services.AddScoped<AbonosService>();
 builder.Services.AddSweetAlert2();
 
 
@@ -72,7 +72,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocurrió un error al sembrar la base de datos.");
+        logger.LogError(ex, "OcurriÃ³ un error al sembrar la base de datos.");
     }
 }
 

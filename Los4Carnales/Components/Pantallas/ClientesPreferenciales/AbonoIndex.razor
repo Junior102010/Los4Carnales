@@ -1,0 +1,109 @@
+﻿@page "/Abono/Index"
+@using Microsoft.AspNetCore.Authorization
+
+
+
+@inject AbonosService abonosService
+@inject ClientesServices clientesServices
+@inject NavigationManager navigationManager
+@inject PageTitleService PageTitleService
+
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Afiliados</PageTitle>
+
+<div class="container">
+    <div class="card card-glass rounded-4 p-3 shadow-lg">
+
+        <div class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center">
+            <div>
+                <h4 class="fw-bold text-primary"><i class="bi bi-person"></i> Afiliados</h4>
+                <p class="text-muted small mb-0">Gestión de Clientes Preferenciales</p>
+            </div>
+           
+        </div>
+        <div class="row justify-content-end">
+            <a href="/Cliente/Create" class="btn btn-success col-auto me-5">
+                <i class="bi bi-plus-square"></i> 
+                 Agregar Afiliado
+            </a>
+        </div>
+
+       
+
+        <div class="card-body">
+            @if (Cargando)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                    <p class="mt-2 text-muted">Cargando...</p>
+                </div>
+            }
+            else if (!ListaClientes.Any())
+            {
+                <div class="alert alert-success text-center shadow-sm">
+                    <i class="bi bi-exclamation-circle fs-4 d-block mb-2"></i>
+                    <strong>¡Que paso?!</strong> Ningun Afiliado por el Momento.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive rounded-3 border">
+                    <table class="table table-hover bg-transparent align-middle mb-0">
+                        <thead class="bg-light text-secondary">
+                            <tr>
+                                <th class="">Nombre</th>
+                                <th class="">Apellido</th>
+                                <th class="">Telefono</th>
+                                <th class=" fw-bold text-danger">Sector</th>
+                                <th class="text-center">Acción</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in ListaClientes)
+                            {
+                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
+                                    <td class="">
+                                        <div class="fw-bold text-dark">@item.NombreCliente</div>
+                                    </td>
+
+                                    <td class=" fw-bold text-dark">
+                                        @item.ApellidoCliente
+                                    </td>
+
+                                    <td class="text-muted">
+                                        @item.TelefonoCliente
+                                    </td>
+
+                                    <td class="text-success">
+                                        @item.Sector
+                                    </td>
+
+                                    <td class="text-center">
+                                        <a href="/abono/Create" class="btn btn-sm btn-outline-success border-0 bi bi-pencil-square fs-5"></a>
+                                    </td>
+                                    
+
+                                    
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@code {
+    public List<Cliente> ListaClientes { get; set; } = new List<Cliente>();
+    public bool Cargando { get; set; } = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Administracion de Afiliados");
+
+        ListaClientes = await clientesServices.Listar(p => p.ClienteId > 0);
+        Cargando = false;
+    }
+}

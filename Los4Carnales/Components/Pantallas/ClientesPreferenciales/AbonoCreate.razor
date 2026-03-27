@@ -1,0 +1,197 @@
+﻿@page "/Abono/Create"
+@page "/Abono/Create/{ClienteIdParam:int}"
+
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Los4Carnales.Data
+
+@inject AbonosService abonosService
+@inject ClientesServices clientesService
+@inject NavigationManager navigationManager
+
+@inject PageTitleService PageTitleService
+@inject UserManager<ApplicationUser> userManager
+
+@rendermode InteractiveServer
+@attribute [Authorize(Roles = "Administrador")]
+
+<PageTitle>Registrar Pago</PageTitle>
+
+<div class="container">
+    <div class="card card-glass rounded-4 p-4 shadow-sm mx-auto" style="max-width: 700px;">
+
+        <div class="text-center mb-4">
+            <div class="badge bg-success bg-opacity-10 text-success p-3 rounded-circle mb-2 shadow-sm">
+                <i class="bi bi-cash-stack fs-1"></i>
+            </div>
+            <h4 class="fw-bold text-secondary">Registrar Abono</h4>
+            <p class="text-muted small">Ingrese los detalles del pago recibido.</p>
+        </div>
+
+        @* AGREGADO FormName="RegistroAbono" PARA CORREGIR EL ERROR *@
+        <EditForm Model="Abono" OnValidSubmit="Guardar" FormName="RegistroAbono">
+            <DataAnnotationsValidator />
+
+            <div class="card-body p-0">
+
+                @* Selector de Cliente *@
+                <div class="mb-4">
+                    <label class="form-label text-muted fw-bold small">CLIENTE / EMPRESA</label>
+                    <div class="input-group">
+                        <InputSelect class="form-select input-glass fs-5"
+                                     Value="Abono.ClienteId"
+                                     ValueExpression="() => Abono.ClienteId"
+                                     ValueChanged="(int id) => CambioCliente(id)"
+                                     disabled="@(ClienteIdParam > 0)">
+                            <option value="0">-- Seleccione Empresa --</option>
+                            @foreach (var c in ListaClientesEmpresariales)
+                            {
+                                <option value="@c.ClienteId">@c.NombreCliente</option>
+                            }
+                        </InputSelect>
+
+                        @if (ClienteIdParam == 0)
+                        {
+                            <span class="input-group-text bg-white border-start-0 text-secondary"><i class="bi bi-search"></i></span>
+                        }
+                    </div>
+                    <ValidationMessage For="(() => Abono.ClienteId)" />
+                </div>
+
+                @* Panel de Deuda *@
+                <div class="card bg-light border-0 mb-4 overflow-hidden position-relative">
+                    <div class="card-body text-center py-4">
+                        <small class="text-muted text-uppercase fw-bold ls-1">Deuda Pendiente</small>
+                        <h1 class="@(DeudaActual > 0 ? "text-danger" : "text-success") fw-bold display-5 my-1">
+                            RD$ @DeudaActual.ToString("N2")
+                        </h1>
+                        @if (DeudaActual <= 0 && Abono.ClienteId > 0)
+                        {
+                            <span class="badge bg-success"><i class="bi bi-check-all"></i> Al día</span>
+                        }
+                    </div>
+                    @* Decoración visual *@
+                    <div class="position-absolute top-0 start-0 w-100 h-1 bg-gradient-primary"></div>
+                </div>
+
+                @* Monto y Fecha *@
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label text-muted fw-bold small">MONTO A PAGAR</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-transparent border-end-0 text-success fw-bold">$</span>
+                            <InputNumber class="form-control input-glass fw-bold text-success fs-5 border-start-0" @bind-Value="Abono.Monto" placeholder="0.00" />
+                        </div>
+                        <ValidationMessage For="(() => Abono.Monto)" />
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label text-muted fw-bold small">FECHA</label>
+                        <InputDate class="form-control input-glass" @bind-Value="Abono.Fecha" />
+                    </div>
+                </div>
+
+                @* Observación *@
+                <div class="mb-4">
+                    <label class="form-label text-muted fw-bold small">OBSERVACIÓN / NOTA</label>
+                    <InputTextArea class="form-control input-glass" @bind-Value="Abono.Observacion" placeholder="Ej: Pago parcial, Cheque #123..." rows="2" />
+                </div>
+            </div>
+
+            <div class="d-grid gap-2 d-md-flex justify-content-md-between pt-3 border-top border-light">
+                <a href="/Abono/Index" class="btn btn-outline-secondary px-4">
+                    <i class="bi bi-arrow-left"></i> Volver a Lista
+                </a>
+                <button type="submit" class="btn btn-gradiente px-5 py-2 shadow-sm flex-grow-1 flex-md-grow-0">
+                    <i class="bi bi-check-circle-fill me-2"></i> CONFIRMAR PAGO
+                </button>
+            </div>
+
+        </EditForm>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public int ClienteIdParam { get; set; } // Recibe el ID desde la tabla
+
+    [SupplyParameterFromForm]
+    public Abono Abono { get; set; } = new Abono();
+
+    public List<Cliente> ListaClientesEmpresariales { get; set; } = new List<Cliente>();
+    public double DeudaActual { get; set; } = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        PageTitleService.SetTitle("Cobrar");
+
+        // 1. Obtener todos los clientes
+        var todosLosClientes = await clientesService.Listar(c => c.ClienteId > 0);
+
+        // 2. Filtrar solo los que sean Empresas (Usando Identity)
+        // NOTA: Esto puede ser lento si son miles, idealmente el Cliente tendría un campo "TipoCliente"
+        // Pero siguiendo tu estructura actual:
+        var empresasUsers = await userManager.GetUsersInRoleAsync("Cliente"); // O filtramos manual
+
+        // Estrategia rápida: Mostrar todos los que tengan deuda O que sean empresas
+        // Para simplificar y hacerlo rápido, mostraremos todos, pero el Admin sabe a quién cobrar.
+        // O mejor: Filtramos los que tienen movimientos de crédito.
+
+        // Opción B (Más segura): Traer solo clientes que existen en la tabla Pedidos con MetodoPago = 'Credito'
+        // Esto garantiza que solo salgan los que pueden deber algo.
+        // Pero por ahora, cargamos todos para que no se rompa nada.
+        ListaClientesEmpresariales = todosLosClientes;
+
+        Abono.Fecha = DateTime.Now;
+
+        // Si viene con parámetro, cargamos datos
+        if (ClienteIdParam > 0)
+        {
+            await CambioCliente(ClienteIdParam);
+        }
+    }
+
+    private async Task CambioCliente(int id)
+    {
+        Abono.ClienteId = id;
+        if (id > 0)
+        {
+            DeudaActual = await abonosService.CalcularDeuda(id);
+        }
+        else
+        {
+            DeudaActual = 0;
+        }
+    }
+
+    public async Task Guardar()
+    {
+        if (Abono.ClienteId <= 0)
+        {
+
+            return;
+        }
+
+        if (Abono.Monto <= 0)
+        {
+
+            return;
+        }
+
+        // Advertencia si paga de más (opcional)
+        if (Abono.Monto > DeudaActual && DeudaActual > 0)
+        {
+            // toastService.ShowInfo("Nota: El cliente quedará con saldo a favor.");
+        }
+
+        var guardado = await abonosService.Guardar(Abono);
+        if (guardado)
+        {
+
+            navigationManager.NavigateTo("/Abono/Index"); // Volver a la tabla
+        }
+        else
+        {
+
+        }
+    }
+}
