@@ -147,47 +147,49 @@
 
     private async Task GuardarTransferenciaCompleta()
     {
-        if (NuevaTransferencia.ClienteId <= 0)
+        try
         {
-            await Swal.FireAsync("Error", "Debes seleccionar un cliente.", SweetAlertIcon.Error);
-            return;
-        }
-
-        string uploadsPath;
-
-        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("HOME")))
-        {
-            // Azure
-            uploadsPath = Path.Combine(Environment.GetEnvironmentVariable("HOME"), "site", "wwwroot", "TransferenciaUploads");
-        }
-        else
-        {
-            // Local
-            uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "TransferenciaUploads");
-        }
-
-        if (!Directory.Exists(uploadsPath))
-            Directory.CreateDirectory(uploadsPath);
-
-        NuevaTransferencia.Imagenes ??= new List<TransferenciaImagen>();
-
-        foreach (var file in selectedFiles)
-        {
-            string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.Name);
-            string fullServerPath = Path.Combine(uploadsPath, uniqueFileName);
-
-            await using (var stream = new FileStream(fullServerPath, FileMode.Create))
+            if (NuevaTransferencia.ClienteId <= 0)
             {
-                await file.OpenReadStream(MaxFileSize).CopyToAsync(stream);
+                await Swal.FireAsync("Error", "Debes seleccionar un cliente.", SweetAlertIcon.Error);
+                return;
             }
-            NuevaTransferencia.Imagenes.Add(new TransferenciaImagen { RutaImagen = $"/TransferenciaUploads/{uniqueFileName}" });
-        }
 
-        bool guardado = await TransferenciaService.Guardar(NuevaTransferencia);
-        if (guardado)
+            // Usamos WebRootPath que es la forma estándar de ASP.NET Core para acceder a wwwroot
+            string uploadsPath = Path.Combine(WebHostEnvironment.WebRootPath, "TransferenciaUploads");
+
+            if (!Directory.Exists(uploadsPath))
+            {
+                Directory.CreateDirectory(uploadsPath);
+            }
+
+            NuevaTransferencia.Imagenes ??= new List<TransferenciaImagen>();
+
+            foreach (var file in selectedFiles)
+            {
+                string uniqueFileName = Guid.NewGuid().ToString() + Path.GetExtension(file.Name);
+                string fullServerPath = Path.Combine(uploadsPath, uniqueFileName);
+
+                await using (var stream = new FileStream(fullServerPath, FileMode.Create))
+                {
+                    await file.OpenReadStream(MaxFileSize).CopyToAsync(stream);
+                }
+
+                // Guardamos la ruta relativa que usará el navegador
+                NuevaTransferencia.Imagenes.Add(new TransferenciaImagen { RutaImagen = $"/TransferenciaUploads/{uniqueFileName}" });
+            }
+
+            bool guardado = await TransferenciaService.Guardar(NuevaTransferencia);
+            if (guardado)
+            {
+                await Swal.FireAsync("¡Guardado!", "La transferencia se registró exitosamente.", SweetAlertIcon.Success);
+                NavigationManager.NavigateTo("/Transferencia/Index");
+            }
+        }
+        catch (Exception ex)
         {
-            await Swal.FireAsync("¡Guardado!", "La transferencia se registró exitosamente.", SweetAlertIcon.Success);
-            NavigationManager.NavigateTo("/Transferencia/Index");
+            // Esto evitará que la app se bloquee y te mostrará el error real en pantalla
+            await Swal.FireAsync("Error de Sistema", $"No se pudo guardar: {ex.Message}", SweetAlertIcon.Error);
         }
     }
 
@@ -223,9 +225,7 @@
 
                 if (user != null && await UserManager.CheckPasswordAsync(user, passwordResult.Value))
                 {
-                    // Se usa el servicio para marcar como eliminado (Eliminado = true)
                     var ok = await TransferenciaService.Eliminar(NuevaTransferencia.TransferenciaId);
-
                     if (ok)
                     {
                         await Swal.FireAsync("¡Eliminado!", "Registro borrado correctamente.", SweetAlertIcon.Success);
