@@ -55,7 +55,7 @@ public static class SeedData
                 EmailConfirmed = true,
                 Nombre = nombre,
                 Apellido = apellido,
-                Telefono = "8090000000" // Valor por defecto o parámetro adicional
+                Telefono = "8090000000" // Valor por defecto o parámetro adicionalmkkk
             };
 
             var result = await userManager.CreateAsync(user, password);
